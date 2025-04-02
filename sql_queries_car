@@ -1,0 +1,121 @@
+
+Name : Sujal Manish Vadgave
+empid : 2000147877
+mysql submission assements
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+create database  cars;
+
+use cars;
+
+create table  Vehicle(
+vehicleID int primary key,
+ make varchar(20),
+ model varchar(30),
+ years date,
+ dailyRate int,
+ avaliable int,
+ passengerCapcity int,
+ engineCapcity int
+);
+insert into vehicle values(1,'Toyota','Camry','2022-01-01',50,1,4,1450);
+insert into vehicle values(2,'Honda','civic','2023-02-01',45,1,7,1500),
+						   (3,'Ford','Focus','2022-01-05',60,0,4,1400),
+                           (8 ,'Mercedes', 'C-Class' ,'2022-01-05',50,1, 8, 2599);
+                           
+create table Customer(
+customerID int primary key,
+ firstName  varchar(20),
+ lastName   varchar(20),
+ email     varchar(30),
+ phoneNumber bigint
+);
+
+insert into Customer values(1 ,'John', 'Doe', 'johndoe@example.com' ,555-555-5555),
+						   (2, 'Jane', 'Smith', 'janesmith@example.com' ,555-123-4567),
+							(3, 'Robert', 'Johnson', 'robert@example.com', 555-789-1234),
+							(4, 'Sarah', 'Brown', 'sarah@example.com', 555-456-7890),
+                              (5, 'David','Lee','david@example.com',555-987-6543);
+                              
+			
+create table lease(
+ leaseID  int primary key,
+ vehicleID  int,
+ customerID int ,
+ startDate date,
+ endDate  date,
+ typ varchar(20),
+ foreign key(vehicleID) references Vehicle(vehicleID),
+ foreign key(customerid) references Customer(customerID)
+);   
+
+
+insert into lease values              
+(8, 8, 5, '2023-08-12' ,'2023-08-15', 'Monthly');
+
+create table paymenttable(
+paymentid int primary key,
+leaseId int,
+paymentdate date,
+amount int,
+ foreign key(leaseId) references lease(leaseID)
+);
+
+insert into paymenttable values(1 ,1, '2023-01-03' ,200.00),
+(2 ,2, '2023-02-20',1000.00),
+(3, 3, '2023-03-12',75.00);
+
+set sql_safe_updates = 0;
+
+-- 1 .Update the daily rate for a Mercedes car to 68.-- 
+update Vehicle
+set dailyRate = '68'
+where make = 'Mercedes';
+-- 2. Delete a specific customer and all associated leases and payments-- 
+delete from paymenttable where leaseid IN(select leaseId from lease where customerID = 2);
+-- 3.  Rename the "paymentDate" column in the Payment table to "transactionDate"-- 
+alter table paymenttable rename column paymentdate to transcationdate;
+select * from customer;
+ -- 4  find a specific customer by email.-- 
+ select distinct firstName from customer where email is not null;
+-- 5 get active leases for a specific customer.-- 
+select * from lease where endDate > current_date();
+--  6 Find all payments made by a customer with a specific phone number.-- 
+      select  distinct phone_no from customer;
+-- 7 Calculate the average daily rate of all available cars.-- 
+select avg(dailyRate) as daily_rate
+from vehicle
+group by make;
+--  8 Find the car with the highest daily rate-- 
+select make
+from vehicle
+order by dailyrate desc
+limit 1;
+ -- 9 Retrieve all cars leased by a specific customer-- 
+ select distinct l.customerId ,v.make from  lease l join vehicle v on v.vehicleid = l.vehicleid;
+ -- 10 find the details of the most recent lease--
+ select * from lease
+ where curdate() = startdate;
+ -- 11 list all payments made in the year 2023-- 
+ select * from paymenttable where transcationDate <= ('2023-12-31');
+ -- 12 retrieve customer who have not made any payments-- 
+    select l.customerid from lease l join paymenttable p on l.leaseid = p.leaseid where p.amount is null;
+ -- 13  retrive the car detail and totalpayments-- 
+    select  V.*,sum(p.amount) as totalpayments from vehicle v join lease l on v.vehicleid = l.vehicleid join paymenttable p on l.leaseid = p.leaseid
+    group by v.vehicleid;
+    -- 14 calculate the totle payment for each customer-- 
+    select  c.customerid,c.firstname,c.lastname,c.sum(dailyrate) from customer group by make;
+    -- 15 list all the car detail for ecah lease-- 
+    select l.leaseid,v.* from lease l join vehicle v on l.vehicleId = v.vehicle.Id;
+     -- 16
+     select l.* ,c.*,v.*  from lease l join customer c on l.customerid =l.customerid join paymenttable p on l.leaseid =p.leaseid group by c.customerid;
+     -- 17
+     select c.*,sum(p.amount) as totalspent  from customer c join lease l on c.customerid = l.customerid join payment p on l.leaselid = p.leaseid group by c.customerid order by totalspent desc limit 1;
+	 -- 18
+    select v.*,l.*,p.transactiondate p.amount from vehical left join lease l  on v.vehicle.id= l.lease.id left join 
+     paymenttable p on l.laeseid = p.leaseid;
+    
