@@ -1,0 +1,3959 @@
+-- Create the HMBank database
+CREATE DATABASE IF NOT EXISTS HMBanks;
+USE HMBanks;
+
+-- Create the Customers Table
+CREATE TABLE IF NOT EXISTS Customers (
+    customer_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    DOB DATE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone_number VARCHAR(15) NOT NULL,
+    address VARCHAR(255) NOT NULL
+);
+
+-- Create the Accounts Table
+CREATE TABLE IF NOT EXISTS Accounts (
+    account_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    account_type ENUM('savings', 'current', 'zero_balance') NOT NULL,
+    balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id) ON DELETE CASCADE
+);
+
+-- Create the Transactions Table
+CREATE TABLE IF NOT EXISTS Transactions (
+    transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    account_id INT NOT NULL,
+    transaction_type ENUM('deposit', 'withdrawal', 'transfer') NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    transaction_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES Accounts(account_id) ON DELETE CASCADE
+);
+
+-- Insert sample data into Customers
+INSERT INTO Customers (first_name, last_name, DOB, email, phone_number, address) VALUES
+('John', 'Doe', '1985-03-15', 'john.doe@gmail.com', '1234567890', '123 Maple St, New York, NY'),
+('Jane', 'Smith', '1990-07-22', 'jane.smith@yahoo.com', '2345678901', '456 Oak Ave, Los Angeles, CA'),
+('Michael', 'Brown', '1978-11-30', 'michael.brown@outlook.com', '3456789012', '789 Pine Rd, Chicago, IL'),
+('Emily', 'Davis', '1995-01-10', 'emily.davis@gmail.com', '4567890123', '101 Birch Ln, Houston, TX'),
+('Robert', 'Wilson', '1982-09-05', 'robert.wilson@hotmail.com', '5678901234', '202 Cedar Dr, Miami, FL'),
+('Sarah', 'Taylor', '1988-04-18', 'sarah.taylor@gmail.com', '6789012345', '303 Elm St, Seattle, WA'),
+('David', 'Johnson', '1975-12-25', 'david.johnson@yahoo.com', '7890123456', '404 Spruce Ct, Boston, MA'),
+('Lisa', 'Martinez', '1992-06-14', 'lisa.martinez@outlook.com', '8901234567', '505 Willow Way, Denver, CO'),
+('James', 'Lee', '1980-08-09', 'james.lee@gmail.com', '9012345678', '606 Ash Blvd, Phoenix, AZ'),
+('Anna', 'Garcia', '1993-02-28', 'anna.garcia@hotmail.com', '0123456789', '707 Poplar St, San Francisco, CA');
+
+-- Insert sample data into Accounts
+INSERT INTO Accounts (customer_id, account_type, balance) VALUES
+(1, 'savings', 5000.00),    -- John Doe
+(2, 'current', 2500.00),    -- Jane Smith
+(3, 'savings', 7500.00),    -- Michael Brown
+(4, 'zero_balance', 0.00),  -- Emily Davis
+(5, 'current', 10000.00),   -- Robert Wilson
+(6, 'savings', 3000.00),    -- Sarah Taylor
+(7, 'zero_balance', 0.00),  -- David Johnson
+(8, 'savings', 12000.00),   -- Lisa Martinez
+(9, 'current', 4500.00),    -- James Lee
+(10, 'savings', 8000.00);   -- Anna Garcia
+
+-- Insert sample data into Transactions
+INSERT INTO Transactions (account_id, transaction_type, amount, transaction_date) VALUES
+(1, 'deposit', 2000.00, '2025-03-01 10:00:00'),     
+(2, 'withdrawal', 500.00, '2025-03-02 14:30:00'),   
+(3, 'deposit', 3000.00, '2025-03-03 09:15:00'),     
+(4, 'deposit', 100.00, '2025-03-04 12:00:00'),     
+(5, 'transfer', 2000.00, '2025-03-05 16:45:00'),   
+(6, 'withdrawal', 1000.00, '2025-03-06 11:30:00'),  
+(7, 'deposit', 50.00, '2025-03-07 13:00:00'),       
+(8, 'deposit', 4000.00, '2025-03-08 15:20:00'),     
+(9, 'withdrawal', 1500.00, '2025-03-09 10:10:00'), 
+(10, 'transfer', 3000.00, '2025-03-10 17:00:00');   
+
+-- 1. Retrieve the Name, Account Type, and Email of All Customers
+SELECT c.first_name, c.last_name, a.account_type, c.email
+FROM Customers c
+JOIN Accounts a ON c.customer_id = a.customer_id;
+
+-- 2. List All Transactions with Corresponding Customer Details
+SELECT t.transaction_id, t.account_id, t.transaction_type, t.amount, t.transaction_date, c.first_name, c.last_name, c.email
+FROM Transactions t
+JOIN Accounts a ON t.account_id = a.account_id
+JOIN Customers c ON a.customer_id = c.customer_id;
+
+-- 3. Increase the Balance of a Specific Account by a Certain Amount (Example: account_id = 5, amount = 1000)
+UPDATE Accounts
+SET balance = balance + 1000
+WHERE account_id = 5;
+
+-- 4. Combine First and Last Names of Customers as full_name
+SELECT CONCAT(first_name, ' ', last_name) AS full_name, email
+FROM Customers;
+
+-- 5. Remove Accounts with a Balance of Zero Where the Account Type is 'savings'
+DELETE FROM Accounts
+WHERE account_type = 'savings' AND balance = 0;
+
+-- 6. Find Customers Living in a Specific City (Example: 'Los Angeles')
+SELECT *
+FROM Customers
+WHERE address LIKE '%Los Angeles%';
+
+-- 7. Get the Account Balance for a Specific Account (Example: account_id = 5)
+SELECT balance
+FROM Accounts
+WHERE account_id = 5;
+
+-- 8. List All Current Accounts with a Balance Greater Than $1,000
+SELECT account_id, customer_id, balance
+FROM Accounts
+WHERE account_type = 'current' AND balance > 1000;
+
+-- 9. Retrieve All Transactions for a Specific Account (Example: account_id = 5)
+SELECT transaction_id, transaction_type, amount, transaction_date
+FROM Transactions
+WHERE account_id = 5;
+
+-- 10. Calculate the Interest Accrued on Savings Accounts Based on a Given Interest Rate (Example: 5% annual interest)
+SELECT account_id, balance, (balance * 0.05) AS interest_accrued
+FROM Accounts
+WHERE account_type = 'savings';
+
+-- 11. Identify Accounts Where the Balance Is Less Than a Specified Overdraft Limit (Example: $500)
+SELECT account_id, customer_id, balance
+FROM Accounts
+WHERE balance < 500;
+
+-- 12. Find Customers Not Living in a Specific City (Example: Not 'Los Angeles')
+SELECT *
+FROM Customers
+WHERE address NOT LIKE '%Los Angeles%';
+*********************************************************************************************task 3*********************************************************************************************************************
+-- 1. Average Account Balance for All Customers
+SELECT AVG(balance) AS average_balance
+FROM Accounts;
+
+-- 2. Top 10 Highest Account Balances
+SELECT customer_id, account_id, balance
+FROM Accounts
+ORDER BY balance DESC
+LIMIT 10;
+
+-- 3. Total Deposits for All Customers on a Specific Date (Example: 2025-03-05)
+SELECT SUM(amount) AS total_deposits
+FROM Transactions
+WHERE transaction_type = 'deposit'
+  AND DATE(transaction_date) = '2025-03-05';
+
+-- 4. Oldest and Newest Customers
+-- Oldest Customer
+SELECT * 
+FROM Customers
+ORDER BY DOB ASC
+LIMIT 1;
+
+-- Newest Customer
+SELECT * 
+FROM Customers
+ORDER BY DOB DESC
+LIMIT 1;
+
+-- 5. Transaction Details with Account Type
+SELECT t.transaction_id, t.account_id, t.transaction_type, t.amount, t.transaction_date, a.account_type
+FROM Transactions t
+JOIN Accounts a ON t.account_id = a.account_id;
+
+-- 6. Customers with Their Account Details
+SELECT c.customer_id, c.first_name, c.last_name, c.email, a.account_id, a.account_type, a.balance
+FROM Customers c
+JOIN Accounts a ON c.customer_id = a.customer_id;
+
+-- 7. Transaction Details with Customer Info for a Specific Account (Example: account_id = 5)
+SELECT c.first_name, c.last_name, t.transaction_id, t.transaction_type, t.amount, t.transaction_date
+FROM Transactions t
+JOIN Accounts a ON t.account_id = a.account_id
+JOIN Customers c ON a.customer_id = c.customer_id
+WHERE a.account_id = 5;
+
+-- 8. Customers with More Than One Account
+SELECT c.customer_id, c.first_name, c.last_name, COUNT(a.account_id) AS account_count
+FROM Customers c
+JOIN Accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id
+HAVING account_count > 1;
+
+-- 9. Difference Between Deposits and Withdrawals
+SELECT 
+    (SELECT SUM(amount) FROM Transactions WHERE transaction_type = 'deposit') -
+    (SELECT SUM(amount) FROM Transactions WHERE transaction_type = 'withdrawal') AS net_difference;
+
+-- 10. Average Daily Balance for Each Account Over a Period (Example: 2025-03-01 to 2025-03-10)
+SELECT account_id, 
+       AVG(balance) AS average_daily_balance
+FROM Accounts
+WHERE account_id IN (
+    SELECT DISTINCT account_id
+    FROM Transactions
+    WHERE transaction_date BETWEEN '2025-03-01' AND '2025-03-10'
+)
+GROUP BY account_id;
+
+-- 11. Total Balance for Each Account Type
+SELECT account_type, SUM(balance) AS total_balance
+FROM Accounts
+GROUP BY account_type;
+
+-- 12. Accounts with the Highest Number of Transactions (Descending Order)
+SELECT account_id, COUNT(transaction_id) AS transaction_count
+FROM Transactions
+GROUP BY account_id
+ORDER BY transaction_count DESC;
+
+-- 13. Customers with High Aggregate Account Balances & Their Account Types
+SELECT c.customer_id, c.first_name, c.last_name, a.account_type, SUM(a.balance) AS total_balance
+FROM Customers c
+JOIN Accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id, a.account_type
+ORDER BY total_balance DESC;
+
+-- 14. Duplicate Transactions Based on Amount, Date, and Account
+SELECT transaction_id, account_id, transaction_type, amount, transaction_date, COUNT(*) AS duplicate_count
+FROM Transactions
+GROUP BY account_id, transaction_type, amount, DATE(transaction_date)
+HAVING duplicate_count > 1;
+***********************************task 4*****************************
+-- 1. Retrieve the Customer(s) with the Highest Account Balance
+SELECT c.customer_id, c.first_name, c.last_name, a.balance
+FROM Customers c
+JOIN Accounts a ON c.customer_id = a.customer_id
+WHERE a.balance = (SELECT MAX(balance) FROM Accounts);
+
+-- 2. Calculate the Average Account Balance for Customers Who Have More Than One Account
+SELECT AVG(a.balance) AS average_balance
+FROM Accounts a
+JOIN (
+    SELECT customer_id
+    FROM Accounts
+    GROUP BY customer_id
+    HAVING COUNT(account_id) > 1
+) t ON a.customer_id = t.customer_id;
+
+-- 3. Retrieve Accounts with Transactions Whose Amounts Exceed the Average Transaction Amount
+SELECT a.account_id, a.customer_id, a.balance
+FROM Accounts a
+WHERE a.account_id IN (
+    SELECT t.account_id
+    FROM Transactions t
+    GROUP BY t.account_id
+    HAVING AVG(t.amount) > (SELECT AVG(amount) FROM Transactions)
+);
+
+-- 4. Identify Customers Who Have No Recorded Transactions
+SELECT c.customer_id, c.first_name, c.last_name
+FROM Customers c
+LEFT JOIN Accounts a ON c.customer_id = a.customer_id
+LEFT JOIN Transactions t ON a.account_id = t.account_id
+WHERE t.transaction_id IS NULL;
+
+-- 5. Calculate the Total Balance of Accounts with No Recorded Transactions
+SELECT SUM(a.balance) AS total_balance
+FROM Accounts a
+LEFT JOIN Transactions t ON a.account_id = t.account_id
+WHERE t.transaction_id IS NULL;
+
+-- 6. Retrieve Transactions for Accounts with the Lowest Balance
+SELECT t.transaction_id, t.account_id, t.transaction_type, t.amount, t.transaction_date
+FROM Transactions t
+JOIN Accounts a ON t.account_id = a.account_id
+WHERE a.balance = (SELECT MIN(balance) FROM Accounts);
+
+-- 7. Identify Customers Who Have Accounts of Multiple Types
+SELECT c.customer_id, c.first_name, c.last_name
+FROM Customers c
+JOIN Accounts a ON c.customer_id = a.customer_id
+GROUP BY c.customer_id
+HAVING COUNT(DISTINCT a.account_type) > 1;
+
+-- 8. Calculate the Percentage of Each Account Type Out of the Total Number of Accounts
+SELECT account_type, 
+       COUNT(*) AS account_count,
+       (COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Accounts)) AS percentage
+FROM Accounts
+GROUP BY account_type;
+
+-- 9. Retrieve All Transactions for a Customer with a Given customer_id (Example: customer_id = 5)
+SELECT t.transaction_id, t.account_id, t.transaction_type, t.amount, t.transaction_date
+FROM Transactions t
+JOIN Accounts a ON t.account_id = a.account_id
+WHERE a.customer_id = 5;
+
+-- 10. Calculate the Total Balance for Each Account Type, Including a Subquery Within the SELECT Clause
+SELECT a.account_type, 
+       SUM(a.balance) AS total_balance,
+       (SELECT COUNT(*) FROM Accounts WHERE account_type = a.account_type) AS account_count
+FROM Accounts a
+GROUP BY a.account_type;
+********************************************************************************** JAVA ASSIGNMENTS ***********************************************************************************************************
+
+TASK 1
+import java.util.Scanner;
+
+public class LoanEligibilityChecker {
+    public static void main(String[] args) {
+        // Scanner to take input from the user
+        Scanner scanner = new Scanner(System.in);
+
+        // Taking input for credit score and annual income
+        System.out.print("Enter your credit score: ");
+        int creditScore = scanner.nextInt();
+
+        System.out.print("Enter your annual income: ");
+        double annualIncome = scanner.nextDouble();
+
+        // Eligibility criteria
+        if (creditScore > 700 && annualIncome >= 50000) {
+            System.out.println("Congratulations! You are eligible for a loan.");
+        } else {
+            System.out.println("Sorry, you are not eligible for a loan based on the given criteria.");
+        }
+
+        // Closing the scanner
+        scanner.close();
+    }
+}
+
+TASK 2
+import java.util.Scanner;
+
+public class ATMTransaction {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Initial balance
+        System.out.print("Enter your current balance: ");
+        double balance = scanner.nextDouble();
+
+        // ATM Menu Options
+        System.out.println("\n--- ATM Menu ---");
+        System.out.println("1. Check Balance");
+        System.out.println("2. Withdraw");
+        System.out.println("3. Deposit");
+        System.out.print("Choose an option (1/2/3): ");
+        int choice = scanner.nextInt();
+
+        // Nested Conditional Statements for ATM Operations
+        if (choice == 1) {
+            // Check Balance
+            System.out.println("Your current balance is: $" + balance);
+        } 
+        else if (choice == 2) {
+            // Withdraw
+            System.out.print("Enter the amount you want to withdraw: ");
+            double withdrawAmount = scanner.nextDouble();
+
+            if (withdrawAmount > 0) {
+                if (withdrawAmount <= balance) {
+                    if (withdrawAmount % 100 == 0 || withdrawAmount % 500 == 0) {
+                        balance -= withdrawAmount;
+                        System.out.println("Withdrawal successful! New balance: $" + balance);
+                    } else {
+                        System.out.println("Error: Withdrawal amount must be in multiples of 100 or 500.");
+                    }
+                } else {
+                    System.out.println("Error: Insufficient balance.");
+                }
+            } else {
+                System.out.println("Error: Invalid withdrawal amount.");
+            }
+        } 
+        else if (choice == 3) {
+            // Deposit
+            System.out.print("Enter the amount you want to deposit: ");
+            double depositAmount = scanner.nextDouble();
+
+            if (depositAmount > 0) {
+                balance += depositAmount;
+                System.out.println("Deposit successful! New balance: $" + balance);
+            } else {
+                System.out.println("Error: Invalid deposit amount.");
+            }
+        } 
+        else {
+            System.out.println("Invalid option selected. Please try again.");
+        }
+
+        // Closing the scanner
+        scanner.close();
+    }
+}
+**************************************************************************TASK 3*****************************************************************************
+import java.util.Scanner;
+
+public class CompoundInterestCalculator {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Prompt for the number of customers
+        System.out.print("Enter the number of customers: ");
+        int numCustomers = scanner.nextInt();
+
+        // Loop for each customer
+        for (int i = 1; i <= numCustomers; i++) {
+            System.out.println("\nCustomer " + i + " Details:");
+
+            // Taking input from the user
+            System.out.print("Enter the initial balance: ");
+            double initialBalance = scanner.nextDouble();
+
+            System.out.print("Enter the annual interest rate (in %): ");
+            double annualInterestRate = scanner.nextDouble();
+
+            System.out.print("Enter the number of years: ");
+            int years = scanner.nextInt();
+
+            // Compound Interest Formula
+            double futureBalance = initialBalance * Math.pow(1 + (annualInterestRate / 100), years);
+
+            // Displaying the future balance
+            System.out.println("Future balance after " + years + " years: $" + String.format("%.2f", futureBalance));
+        }
+
+        // Closing the scanner
+        scanner.close();
+    }
+}
+
+*********************************************************************TASK 4**********************************************************************************************************
+import java.util.Scanner;
+
+public class BankAccountChecker {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Arrays for account numbers and corresponding balances
+        String[] accountNumbers = {"1001", "1002", "1003", "1004"};
+        double[] balances = {1500.75, 2500.50, 3200.00, 4100.25};
+
+        // Loop to validate account number and display balance
+        while (true) {
+            System.out.print("Enter your account number: ");
+            String inputAccountNumber = scanner.nextLine();
+
+            boolean accountFound = false;
+
+            // Search for the account
+            for (int i = 0; i < accountNumbers.length; i++) {
+                if (accountNumbers[i].equals(inputAccountNumber)) {
+                    System.out.println("Your account balance is: $" + balances[i]);
+                    accountFound = true;
+                    break;
+                }
+            }
+
+            if (!accountFound) {
+                System.out.println("Invalid account number. Please try again.");
+            } else {
+                break;
+            }
+        }
+
+        scanner.close();
+    }
+}
+
+
+***********************************************************************************Taskno 5***************************************************************************************************
+
+
+import java.util.Scanner;
+
+public class PasswordValidation {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Loop until a valid password is entered
+        while (true) {
+            System.out.print("Create a password for your bank account: ");
+            String password = scanner.nextLine();
+
+            if (isValidPassword(password)) {
+                System.out.println("Password is valid!");
+                break;
+            } else {
+                System.out.println("Invalid password. Password must:");
+                System.out.println("- Be at least 8 characters long");
+                System.out.println("- Contain at least one uppercase letter");
+                System.out.println("- Contain at least one digit");
+            }
+        }
+
+        scanner.close();
+    }
+
+    // Method to validate password
+    public static boolean isValidPassword(String password) {
+        if (password.length() < 8) return false;
+
+        boolean hasUppercase = false;
+        boolean hasDigit = false;
+
+        for (char ch : password.toCharArray()) {
+            if (Character.isUpperCase(ch)) hasUppercase = true;
+            if (Character.isDigit(ch)) hasDigit = true;
+        }
+
+        return hasUppercase && hasDigit;
+    }
+}
+
+*******************************************************************************************Task 6*******************************************************************************************************
+import java.util.Scanner;
+
+class Transaction {
+    String type;      // "Deposit" or "Withdrawal"
+    double amount;    // Transaction amount
+
+    public Transaction(String type, double amount) {
+        this.type = type;
+        this.amount = amount;
+    }
+
+    @Override
+    public String toString() {
+        return type + ": $" + amount;
+    }
+}
+
+public class TransactionHistory {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Fixed-size array to store up to 10 transactions
+        Transaction[] transactions = new Transaction[10];
+        int transactionCount = 0;  // To track the number of transactions
+
+        while (true) {
+            System.out.println("\n--- Bank Transaction Menu ---");
+            System.out.println("1. Add Transaction");
+            System.out.println("2. View Transaction History");
+            System.out.println("3. Exit");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    if (transactionCount >= transactions.length) {
+                        System.out.println("Transaction limit reached. Cannot add more transactions.");
+                        break;
+                    }
+
+                    System.out.print("Enter transaction type (Deposit/Withdrawal): ");
+                    String type = scanner.next();
+                    System.out.print("Enter amount: ");
+                    double amount = scanner.nextDouble();
+
+                    if (amount <= 0) {
+                        System.out.println("Invalid amount. Please enter a positive value.");
+                        break;
+                    }
+
+                    if (type.equalsIgnoreCase("Deposit") || type.equalsIgnoreCase("Withdrawal")) {
+                        transactions[transactionCount] = new Transaction(type, amount);
+                        transactionCount++;
+                        System.out.println("Transaction added successfully!");
+                    } else {
+                        System.out.println("Invalid transaction type. Use 'Deposit' or 'Withdrawal'.");
+                    }
+                    break;
+
+                case 2:
+                    if (transactionCount == 0) {
+                        System.out.println("No transactions found.");
+                    } else {
+                        System.out.println("\n--- Transaction History ---");
+                        for (int i = 0; i < transactionCount; i++) {
+                            System.out.println((i + 1) + ". " + transactions[i]);
+                        }
+                    }
+                    break;
+
+                case 3:
+                    System.out.println("Exiting the program. Thank you!");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+}
+*******************************************************************************************************Taskno7*************************************************************************************************
+// Customer Class
+class Customer {
+    private int customerId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String address;
+
+    // Default Constructor
+    public Customer() {}
+
+    // Parameterized Constructor
+    public Customer(int customerId, String firstName, String lastName, String email, String phoneNumber, String address) {
+        this.customerId = customerId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+    }
+
+    // Getters and Setters
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    // Method to display customer information
+    public void displayCustomerInfo() {
+        System.out.println("Customer ID: " + customerId);
+        System.out.println("Name: " + firstName + " " + lastName);
+        System.out.println("Email: " + email);
+        System.out.println("Phone: " + phoneNumber);
+        System.out.println("Address: " + address);
+    }
+}
+
+// Account Class
+class Account {
+    private int accountNumber;
+    private String accountType;
+    private double accountBalance;
+
+    // Default Constructor
+    public Account() {}
+
+    // Parameterized Constructor
+    public Account(int accountNumber, String accountType, double accountBalance) {
+        this.accountNumber = accountNumber;
+        this.accountType = accountType;
+        this.accountBalance = accountBalance;
+    }
+
+    // Getters and Setters
+    public int getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(int accountNumber) { this.accountNumber = accountNumber; }
+
+    public String getAccountType() { return accountType; }
+    public void setAccountType(String accountType) { this.accountType = accountType; }
+
+    public double getAccountBalance() { return accountBalance; }
+    public void setAccountBalance(double accountBalance) { this.accountBalance = accountBalance; }
+
+    // Method to display account details
+    public void displayAccountInfo() {
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Account Balance: $" + accountBalance);
+    }
+
+    // Deposit Method
+    public void deposit(double amount) {
+        if (amount > 0) {
+            accountBalance += amount;
+            System.out.println("Deposited $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Invalid deposit amount.");
+        }
+    }
+
+    // Withdrawal Method
+    public void withdraw(double amount) {
+        if (amount > 0 && amount <= accountBalance) {
+            accountBalance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Insufficient balance or invalid withdrawal amount.");
+        }
+    }
+
+    // Calculate Interest Method (4.5% Interest Rate)
+    public void calculateInterest() {
+        double interestRate = 4.5;
+        double interest = accountBalance * (interestRate / 100);
+        accountBalance += interest;
+        System.out.println("Interest of $" + interest + " added. New Balance: $" + accountBalance);
+    }
+}
+
+// Bank Class
+public class Bank {
+    public static void main(String[] args) {
+        // Creating a Customer Object
+        Customer customer = new Customer(101, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Maple St, New York");
+        System.out.println("--- Customer Information ---");
+        customer.displayCustomerInfo();
+
+        // Creating an Account Object
+        Account account = new Account(1001, "Savings", 5000.00);
+
+        System.out.println("\n--- Account Information ---");
+        account.displayAccountInfo();
+
+        // Performing Transactions
+        System.out.println("\n--- Performing Transactions ---");
+        account.deposit(2000.00);     // Deposit
+        account.withdraw(1500.00);   // Withdrawal
+        account.calculateInterest(); // Calculate Interest
+
+        System.out.println("\n--- Final Account Details ---");
+        account.displayAccountInfo();
+    }
+}
+**********************************************************************************************Task8************************************************************************************************************
+import java.util.Scanner;
+
+// Base CustomerAccount Class
+class CustomerAccount {
+    protected int accountNumber;
+    protected String accountType;
+    protected double accountBalance;
+
+    // Parameterized Constructor
+    public CustomerAccount(int accountNumber, String accountType, double accountBalance) {
+        this.accountNumber = accountNumber;
+        this.accountType = accountType;
+        this.accountBalance = accountBalance;
+    }
+
+    // Display Account Info
+    public void displayAccountInfo() {
+        System.out.println("\nAccount Number: " + accountNumber);
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Account Balance: $" + accountBalance);
+    }
+
+    // Overloaded Deposit Methods
+    public void deposit(float amount) {
+        if (amount > 0) {
+            accountBalance += amount;
+            System.out.println("Deposited $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Invalid deposit amount.");
+        }
+    }
+
+    public void deposit(int amount) {
+        if (amount > 0) {
+            accountBalance += amount;
+            System.out.println("Deposited $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Invalid deposit amount.");
+        }
+    }
+
+    public void deposit(double amount) {
+        if (amount > 0) {
+            accountBalance += amount;
+            System.out.println("Deposited $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Invalid deposit amount.");
+        }
+    }
+
+    // Overloaded Withdraw Methods
+    public void withdraw(float amount) {
+        if (amount > 0 && amount <= accountBalance) {
+            accountBalance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Insufficient balance or invalid withdrawal amount.");
+        }
+    }
+
+    public void withdraw(int amount) {
+        if (amount > 0 && amount <= accountBalance) {
+            accountBalance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Insufficient balance or invalid withdrawal amount.");
+        }
+    }
+
+    public void withdraw(double amount) {
+        if (amount > 0 && amount <= accountBalance) {
+            accountBalance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Insufficient balance or invalid withdrawal amount.");
+        }
+    }
+
+    // Interest Calculation (Fixed 4.5%)
+    public void calculateInterest() {
+        double interestRate = 4.5;
+        double interest = accountBalance * (interestRate / 100);
+        accountBalance += interest;
+        System.out.println("Interest of $" + interest + " added. New Balance: $" + accountBalance);
+    }
+}
+
+// PremiumSavingsAccount Class (Inherits from CustomerAccount)
+class PremiumSavingsAccount extends CustomerAccount {
+    private double interestRate;
+
+    public PremiumSavingsAccount(int accountNumber, double accountBalance, double interestRate) {
+        super(accountNumber, "Premium Savings", accountBalance);
+        this.interestRate = interestRate;
+    }
+
+    @Override
+    public void calculateInterest() {
+        double interest = accountBalance * (interestRate / 100);
+        accountBalance += interest;
+        System.out.println("Interest of $" + interest + " added. New Balance: $" + accountBalance);
+    }
+}
+
+// BusinessCurrentAccount Class (Inherits from CustomerAccount)
+class BusinessCurrentAccount extends CustomerAccount {
+    private static final double OVERDRAFT_LIMIT = 500.0;
+
+    public BusinessCurrentAccount(int accountNumber, double accountBalance) {
+        super(accountNumber, "Business Current", accountBalance);
+    }
+
+    @Override
+    public void withdraw(float amount) {
+        if (amount > 0 && (accountBalance - amount) >= -OVERDRAFT_LIMIT) {
+            accountBalance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Insufficient balance or overdraft limit exceeded.");
+        }
+    }
+
+    @Override
+    public void withdraw(int amount) {
+        if (amount > 0 && (accountBalance - amount) >= -OVERDRAFT_LIMIT) {
+            accountBalance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Insufficient balance or overdraft limit exceeded.");
+        }
+    }
+
+    @Override
+    public void withdraw(double amount) {
+        if (amount > 0 && (accountBalance - amount) >= -OVERDRAFT_LIMIT) {
+            accountBalance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + accountBalance);
+        } else {
+            System.out.println("Insufficient balance or overdraft limit exceeded.");
+        }
+    }
+}
+
+// BankSystem Class (Main)
+public class BankSystem {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Welcome to the Bank System!");
+        System.out.print("Enter Account Number: ");
+        int accNum = scanner.nextInt();
+
+        System.out.print("Enter Initial Balance: ");
+        double initialBalance = scanner.nextDouble();
+
+        System.out.println("\nChoose Account Type:");
+        System.out.println("1. Premium Savings Account");
+        System.out.println("2. Business Current Account");
+        System.out.print("Enter your choice: ");
+        int choice = scanner.nextInt();
+
+        CustomerAccount account;
+
+        switch (choice) {
+            case 1:
+                account = new PremiumSavingsAccount(accNum, initialBalance, 4.5);
+                break;
+            case 2:
+                account = new BusinessCurrentAccount(accNum, initialBalance);
+                break;
+            default:
+                System.out.println("Invalid choice! Exiting...");
+                scanner.close();
+                return;
+        }
+
+        // Menu for Bank Operations
+        while (true) {
+            System.out.println("\n--- Bank Menu ---");
+            System.out.println("1. Display Account Info");
+            System.out.println("2. Deposit Amount");
+            System.out.println("3. Withdraw Amount");
+            System.out.println("4. Calculate Interest");
+            System.out.println("5. Exit");
+            System.out.print("Enter your choice: ");
+            int option = scanner.nextInt();
+
+            switch (option) {
+                case 1:
+                    account.displayAccountInfo();
+                    break;
+
+                case 2:
+                    System.out.print("Enter amount to deposit: ");
+                    double depositAmount = scanner.nextDouble();
+                    account.deposit(depositAmount);
+                    break;
+
+                case 3:
+                    System.out.print("Enter amount to withdraw: ");
+                    double withdrawAmount = scanner.nextDouble();
+                    account.withdraw(withdrawAmount);
+                    break;
+
+                case 4:
+                    account.calculateInterest();
+                    break;
+
+                case 5:
+                    System.out.println("Thank you for using the Bank System!");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid option! Try again.");
+            }
+        }
+    }
+}
+
+
+***********************************************************************************************************Task 9***********************************************************************************************
+
+import java.util.Scanner;
+
+// Abstract Class: BankAccount
+abstract class BankAccount {
+    protected int accountNumber;
+    protected String customerName;
+    protected double balance;
+
+    // Default Constructor
+    public BankAccount() {
+        this.accountNumber = 0;
+        this.customerName = "Unknown";
+        this.balance = 0.0;
+    }
+
+    // Parameterized Constructor
+    public BankAccount(int accountNumber, String customerName, double balance) {
+        this.accountNumber = accountNumber;
+        this.customerName = customerName;
+        this.balance = balance;
+    }
+
+    // Getters and Setters
+    public int getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(int accountNumber) { this.accountNumber = accountNumber; }
+
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public double getBalance() { return balance; }
+    public void setBalance(double balance) { this.balance = balance; }
+
+    // Abstract Methods
+    public abstract void deposit(float amount);
+    public abstract void withdraw(float amount);
+    public abstract void calculateInterest();
+
+    // Display Account Info
+    public void displayAccountInfo() {
+        System.out.println("\nAccount Number: " + accountNumber);
+        System.out.println("Customer Name: " + customerName);
+        System.out.println("Balance: $" + balance);
+    }
+}
+
+// SavingsAccount Class
+class SavingsAccount extends BankAccount {
+    private double interestRate;
+
+    public SavingsAccount(int accountNumber, String customerName, double balance, double interestRate) {
+        super(accountNumber, customerName, balance);
+        this.interestRate = interestRate;
+    }
+
+    @Override
+    public void deposit(float amount) {
+        if (amount > 0) {
+            balance += amount;
+            System.out.println("Deposited $" + amount + ". New Balance: $" + balance);
+        } else {
+            System.out.println("Invalid deposit amount.");
+        }
+    }
+
+    @Override
+    public void withdraw(float amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + balance);
+        } else {
+            System.out.println("Insufficient balance or invalid withdrawal amount.");
+        }
+    }
+
+    @Override
+    public void calculateInterest() {
+        double interest = balance * (interestRate / 100);
+        balance += interest;
+        System.out.println("Interest of $" + interest + " added. New Balance: $" + balance);
+    }
+}
+
+// CurrentAccount Class
+class CurrentAccount extends BankAccount {
+    private static final double OVERDRAFT_LIMIT = 1000.0;
+
+    public CurrentAccount(int accountNumber, String customerName, double balance) {
+        super(accountNumber, customerName, balance);
+    }
+
+    @Override
+    public void deposit(float amount) {
+        if (amount > 0) {
+            balance += amount;
+            System.out.println("Deposited $" + amount + ". New Balance: $" + balance);
+        } else {
+            System.out.println("Invalid deposit amount.");
+        }
+    }
+
+    @Override
+    public void withdraw(float amount) {
+        if (amount > 0 && (balance - amount) >= -OVERDRAFT_LIMIT) {
+            balance -= amount;
+            System.out.println("Withdrawn $" + amount + ". New Balance: $" + balance);
+        } else {
+            System.out.println("Insufficient funds or overdraft limit exceeded.");
+        }
+    }
+
+    @Override
+    public void calculateInterest() {
+        System.out.println("No interest applicable for Current Account.");
+    }
+}
+
+// Class Name Updated to A_9
+public class A_9 {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        BankAccount account = null;
+
+        System.out.println("Welcome to the Bank Application!");
+        System.out.print("Enter Account Number: ");
+        int accNum = scanner.nextInt();
+        scanner.nextLine();  // Consume newline
+
+        System.out.print("Enter Customer Name: ");
+        String customerName = scanner.nextLine();
+
+        System.out.print("Enter Initial Balance: ");
+        double initialBalance = scanner.nextDouble();
+
+        System.out.println("\nChoose Account Type:");
+        System.out.println("1. Savings Account");
+        System.out.println("2. Current Account");
+        System.out.print("Enter your choice: ");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                System.out.print("Enter Interest Rate (e.g., 4.5): ");
+                double interestRate = scanner.nextDouble();
+                account = new SavingsAccount(accNum, customerName, initialBalance, interestRate);
+                break;
+
+            case 2:
+                account = new CurrentAccount(accNum, customerName, initialBalance);
+                break;
+
+            default:
+                System.out.println("Invalid choice! Exiting...");
+                scanner.close();
+                return;
+        }
+
+        // Menu for Bank Operations
+        while (true) {
+            System.out.println("\n--- Bank Menu ---");
+            System.out.println("1. Display Account Info");
+            System.out.println("2. Deposit Amount");
+            System.out.println("3. Withdraw Amount");
+            System.out.println("4. Calculate Interest");
+            System.out.println("5. Exit");
+            System.out.print("Enter your choice: ");
+            int option = scanner.nextInt();
+
+            switch (option) {
+                case 1:
+                    account.displayAccountInfo();
+                    break;
+
+                case 2:
+                    System.out.print("Enter amount to deposit: ");
+                    float depositAmount = scanner.nextFloat();
+                    account.deposit(depositAmount);
+                    break;
+
+                case 3:
+                    System.out.print("Enter amount to withdraw: ");
+                    float withdrawAmount = scanner.nextFloat();
+                    account.withdraw(withdrawAmount);
+                    break;
+
+                case 4:
+                    account.calculateInterest();
+                    break;
+
+                case 5:
+                    System.out.println("Thank you for using the Bank Application!");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid option! Try again.");
+            }
+        }
+    }
+}
+****************************************************************************************Task no 10****************************************************************************************************************
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Pattern;
+
+// Customer Class
+class Customer {
+    private int customerId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String address;
+
+    // Default constructor
+    public Customer() {
+    }
+
+    // Parameterized constructor
+    public Customer(int customerId, String firstName, String lastName, String email, String phoneNumber, String address) {
+        this.customerId = customerId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setEmail(email); // Validate email
+        setPhoneNumber(phoneNumber); // Validate phone number
+        this.address = address;
+    }
+
+    // Getters and Setters
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) {
+        if (isValidEmail(email)) {
+            this.email = email;
+        } else {
+            throw new IllegalArgumentException("Invalid email address");
+        }
+    }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) {
+        if (isValidPhoneNumber(phoneNumber)) {
+            this.phoneNumber = phoneNumber;
+        } else {
+            throw new IllegalArgumentException("Phone number must be 10 digits");
+        }
+    }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    // Email validation
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return Pattern.matches(emailRegex, email);
+    }
+
+    // Phone number validation (10 digits)
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("\\d{10}");
+    }
+
+    // Print all information
+    public void printInfo() {
+        System.out.println("Customer ID: " + customerId);
+        System.out.println("First Name: " + firstName);
+        System.out.println("Last Name: " + lastName);
+        System.out.println("Email: " + email);
+        System.out.println("Phone Number: " + phoneNumber);
+        System.out.println("Address: " + address);
+    }
+}
+
+// Account Class
+class Account {
+    private long accountNumber;
+    private String accountType;
+    private float balance;
+    private Customer customer;
+
+    // Default constructor
+    public Account() {
+    }
+
+    // Parameterized constructor
+    public Account(long accountNumber, String accountType, float balance, Customer customer) {
+        this.accountNumber = accountNumber;
+        this.accountType = accountType;
+        this.balance = balance;
+        this.customer = customer;
+    }
+
+    // Getters and Setters
+    public long getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(long accountNumber) { this.accountNumber = accountNumber; }
+
+    public String getAccountType() { return accountType; }
+    public void setAccountType(String accountType) { this.accountType = accountType; }
+
+    public float getBalance() { return balance; }
+    public void setBalance(float balance) { this.balance = balance; }
+
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    // Print all information
+    public void printInfo() {
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Balance: " + balance);
+        System.out.println("Customer Details:");
+        customer.printInfo();
+    }
+}
+
+// Bank Class
+class Bank {
+    private List<Account> accounts;
+    private static long nextAccountNumber = 1001; // Auto-increment starting from 1001
+
+    public Bank() {
+        accounts = new ArrayList<>();
+    }
+
+    // Create a new account with auto-generated account number
+    public Account createAccount(Customer customer, String accType, float balance) {
+        long accountNumber = nextAccountNumber++;
+        Account account = new Account(accountNumber, accType, balance, customer);
+        accounts.add(account);
+        return account;
+    }
+
+    // Get account balance
+    public float getAccountBalance(long accountNumber) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account.getBalance();
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    // Deposit money
+    public float deposit(long accountNumber, float amount) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount > 0) {
+                account.setBalance(account.getBalance() + amount);
+                return account.getBalance();
+            }
+            throw new IllegalArgumentException("Deposit amount must be positive");
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    // Withdraw money
+    public float withdraw(long accountNumber, float amount) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount > 0 && amount <= account.getBalance()) {
+                account.setBalance(account.getBalance() - amount);
+                return account.getBalance();
+            }
+            throw new IllegalArgumentException("Invalid withdrawal amount or insufficient funds");
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    // Transfer money between accounts
+    public void transfer(long fromAccountNumber, long toAccountNumber, float amount) {
+        float fromBalance = withdraw(fromAccountNumber, amount);
+        float toBalance = deposit(toAccountNumber, amount);
+        System.out.println("Transfer successful. New balance: " + fromAccountNumber + ": " + fromBalance + ", " + toAccountNumber + ": " + toBalance);
+    }
+
+    // Get account details
+    public Account getAccountDetails(long accountNumber) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account;
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    // Helper method to find an account
+    private Account findAccount(long accountNumber) {
+        for (Account account : accounts) {
+            if (account.getAccountNumber() == accountNumber) {
+                return account;
+            }
+        }
+        return null;
+    }
+}
+
+// BankApp Class (Main Method with Menu-Driven Interface)
+public class BankApp {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Bank bank = new Bank();
+        int customerIdCounter = 1;
+
+        while (true) {
+            System.out.println("\nBanking System Menu:");
+            System.out.println("1. Create Account");
+            System.out.println("2. Deposit");
+            System.out.println("3. Withdraw");
+            System.out.println("4. Get Balance");
+            System.out.println("5. Transfer");
+            System.out.println("6. Get Account Details");
+            System.out.println("7. Exit");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
+
+            try {
+                switch (choice) {
+                    case "1": // Create Account
+                        System.out.println("Enter First Name: ");
+                        String firstName = scanner.nextLine();
+                        System.out.println("Enter Last Name: ");
+                        String lastName = scanner.nextLine();
+                        System.out.println("Enter Email: ");
+                        String email = scanner.nextLine();
+                        System.out.println("Enter Phone Number (10 digits): ");
+                        String phoneNumber = scanner.nextLine();
+                        System.out.println("Enter Address: ");
+                        String address = scanner.nextLine();
+
+                        Customer customer = new Customer(customerIdCounter++, firstName, lastName, email, phoneNumber, address);
+
+                        System.out.println("Choose Account Type:");
+                        System.out.println("1. Savings");
+                        System.out.println("2. Current");
+                        System.out.print("Enter choice: ");
+                        String accTypeChoice = scanner.nextLine();
+                        String accType = accTypeChoice.equals("1") ? "Savings" : "Current";
+
+                        System.out.println("Enter Initial Balance: ");
+                        float balance = Float.parseFloat(scanner.nextLine());
+
+                        Account newAccount = bank.createAccount(customer, accType, balance);
+                        System.out.println("Account created with Account Number: " + newAccount.getAccountNumber());
+                        break;
+
+                    case "2": // Deposit
+                        System.out.println("Enter Account Number: ");
+                        long depositAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Deposit: ");
+                        float depositAmount = Float.parseFloat(scanner.nextLine());
+                        float newBalance = bank.deposit(depositAccNo, depositAmount);
+                        System.out.println("Deposit successful. New Balance: " + newBalance);
+                        break;
+
+                    case "3": // Withdraw
+                        System.out.println("Enter Account Number: ");
+                        long withdrawAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Withdraw: ");
+                        float withdrawAmount = Float.parseFloat(scanner.nextLine());
+                        newBalance = bank.withdraw(withdrawAccNo, withdrawAmount);
+                        System.out.println("Withdrawal successful. New Balance: " + newBalance);
+                        break;
+
+                    case "4": // Get Balance
+                        System.out.println("Enter Account Number: ");
+                        long balanceAccNo = Long.parseLong(scanner.nextLine());
+                        float bal = bank.getAccountBalance(balanceAccNo);
+                        System.out.println("Current Balance: " + bal);
+                        break;
+
+                    case "5": // Transfer
+                        System.out.println("Enter From Account Number: ");
+                        long fromAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter To Account Number: ");
+                        long toAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Transfer: ");
+                        float transferAmount = Float.parseFloat(scanner.nextLine());
+                        bank.transfer(fromAccNo, toAccNo, transferAmount);
+                        break;
+
+                    case "6": // Get Account Details
+                        System.out.println("Enter Account Number: ");
+                        long detailsAccNo = Long.parseLong(scanner.nextLine());
+                        Account account = bank.getAccountDetails(detailsAccNo);
+                        account.printInfo();
+                        break;
+
+                    case "7": // Exit
+                        System.out.println("Exiting Banking System. Goodbye!");
+                        scanner.close();
+                        System.exit(0);
+
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        }
+    }
+}
+***************************************************************************************************************Task 11********************************************************************************************
+// Package: service
+// File: service/ICustomerServiceProvider.java
+package service;
+
+import bean.Account;
+
+public interface ICustomerServiceProvider {
+    float getAccountBalance(long accountNumber);
+    float deposit(long accountNumber, float amount);
+    float withdraw(long accountNumber, float amount);
+    void transfer(long fromAccountNumber, long toAccountNumber, float amount);
+    Account getAccountDetails(long accountNumber);
+}
+
+// File: service/IBankServiceProvider.java
+package service;
+
+import bean.Account;
+import bean.Customer;
+
+public interface IBankServiceProvider {
+    Account createAccount(Customer customer, String accType, float balance);
+    Account[] listAccounts();
+    void calculateInterest();
+}
+
+// Package: bean
+// File: bean/Customer.java
+package bean;
+
+import java.util.regex.Pattern;
+
+class Customer {
+    private int customerId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String address;
+
+    public Customer() {
+    }
+
+    public Customer(int customerId, String firstName, String lastName, String email, String phoneNumber, String address) {
+        this.customerId = customerId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setEmail(email);
+        setPhoneNumber(phoneNumber);
+        this.address = address;
+    }
+
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) {
+        if (isValidEmail(email)) {
+            this.email = email;
+        } else {
+            throw new IllegalArgumentException("Invalid email address");
+        }
+    }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) {
+        if (isValidPhoneNumber(phoneNumber)) {
+            this.phoneNumber = phoneNumber;
+        } else {
+            throw new IllegalArgumentException("Phone number must be 10 digits");
+        }
+    }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return Pattern.matches(emailRegex, email);
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("\\d{10}");
+    }
+
+    public void printInfo() {
+        System.out.println("Customer ID: " + customerId);
+        System.out.println("First Name: " + firstName);
+        System.out.println("Last Name: " + lastName);
+        System.out.println("Email: " + email);
+        System.out.println("Phone Number: " + phoneNumber);
+        System.out.println("Address: " + address);
+    }
+}
+
+// File: bean/Account.java
+package bean;
+
+abstract class Account {
+    private long accountNumber;
+    private String accountType;
+    private float balance;
+    private Customer customer;
+    protected static long lastAccNo = 1000;
+
+    public Account() {
+        this.accountNumber = ++lastAccNo;
+    }
+
+    public Account(String accountType, float balance, Customer customer) {
+        this.accountNumber = ++lastAccNo;
+        this.accountType = accountType;
+        this.balance = balance;
+        this.customer = customer;
+    }
+
+    public long getAccountNumber() { return accountNumber; }
+    public String getAccountType() { return accountType; }
+    public float getBalance() { return balance; }
+    public void setBalance(float balance) { this.balance = balance; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    public void printInfo() {
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Balance: " + balance);
+        System.out.println("Customer Details:");
+        customer.printInfo();
+    }
+}
+
+// File: bean/SavingsAccount.java
+package bean;
+
+class SavingsAccount extends Account {
+    private float interestRate;
+    private static final float MIN_BALANCE = 500.0f;
+
+    public SavingsAccount(Customer customer, float balance) {
+        super("Savings", balance >= MIN_BALANCE ? balance : MIN_BALANCE, customer);
+        this.interestRate = 4.5f;
+        if (balance < MIN_BALANCE) {
+            System.out.println("Initial balance below 500. Set to minimum balance of 500.");
+        }
+    }
+
+    public float getInterestRate() { return interestRate; }
+    public void setInterestRate(float interestRate) { this.interestRate = interestRate; }
+
+    public float calculateInterest() {
+        float interest = getBalance() * (interestRate / 100);
+        setBalance(getBalance() + interest);
+        return interest;
+    }
+}
+
+// File: bean/CurrentAccount.java
+package bean;
+
+class CurrentAccount extends Account {
+    private float overdraftLimit;
+
+    public CurrentAccount(Customer customer, float balance, float overdraftLimit) {
+        super("Current", balance, customer);
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public float getOverdraftLimit() { return overdraftLimit; }
+    public void setOverdraftLimit(float overdraftLimit) { this.overdraftLimit = overdraftLimit; }
+}
+
+// File: bean/ZeroBalanceAccount.java
+package bean;
+
+class ZeroBalanceAccount extends Account {
+    public ZeroBalanceAccount(Customer customer) {
+        super("ZeroBalance", 0.0f, customer);
+    }
+}
+
+// File: bean/CustomerServiceProviderImpl.java
+package bean;
+
+import service.ICustomerServiceProvider;
+
+class CustomerServiceProviderImpl implements ICustomerServiceProvider {
+    private Account[] accountList;
+
+    public CustomerServiceProviderImpl(Account[] accountList) {
+        this.accountList = accountList;
+    }
+
+    @Override
+    public float getAccountBalance(long accountNumber) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account.getBalance();
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    @Override
+    public float deposit(long accountNumber, float amount) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount > 0) {
+                account.setBalance(account.getBalance() + amount);
+                return account.getBalance();
+            }
+            throw new IllegalArgumentException("Deposit amount must be positive");
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    @Override
+    public float withdraw(long accountNumber, float amount) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount <= 0) {
+                throw new IllegalArgumentException("Withdrawal amount must be positive");
+            }
+            if (account instanceof SavingsAccount) {
+                if (account.getBalance() - amount < 500) {
+                    throw new IllegalArgumentException("Withdrawal violates minimum balance of 500 for Savings Account");
+                }
+            } else if (account instanceof CurrentAccount) {
+                CurrentAccount ca = (CurrentAccount) account;
+                if (account.getBalance() - amount < -ca.getOverdraftLimit()) {
+                    throw new IllegalArgumentException("Withdrawal exceeds overdraft limit");
+                }
+            } else if (account.getBalance() < amount) {
+                throw new IllegalArgumentException("Insufficient funds");
+            }
+            account.setBalance(account.getBalance() - amount);
+            return account.getBalance();
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    @Override
+    public void transfer(long fromAccountNumber, long toAccountNumber, float amount) {
+        Account fromAccount = findAccount(fromAccountNumber);
+        Account toAccount = findAccount(toAccountNumber);
+        if (fromAccount == null || toAccount == null) {
+            throw new IllegalArgumentException("One or both accounts not found");
+        }
+        float fromBalance = withdraw(fromAccountNumber, amount);
+        float toBalance = deposit(toAccountNumber, amount);
+        System.out.println("Transfer successful. New balances: " + fromAccountNumber + ": " + fromBalance + ", " + toAccountNumber + ": " + toBalance);
+    }
+
+    @Override
+    public Account getAccountDetails(long accountNumber) {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account;
+        }
+        throw new IllegalArgumentException("Account not found");
+    }
+
+    protected Account findAccount(long accountNumber) {
+        for (Account account : accountList) {
+            if (account != null && account.getAccountNumber() == accountNumber) {
+                return account;
+            }
+        }
+        return null;
+    }
+}
+
+// File: bean/BankServiceProviderImpl.java
+package bean;
+
+import service.IBankServiceProvider;
+
+class BankServiceProviderImpl extends CustomerServiceProviderImpl implements IBankServiceProvider {
+    private Account[] accountList;
+    private String branchName;
+    private String branchAddress;
+    private int accountCount;
+
+    public BankServiceProviderImpl(int maxAccounts, String branchName, String branchAddress) {
+        super(new Account[maxAccounts]);
+        this.accountList = new Account[maxAccounts];
+        this.branchName = branchName;
+        this.branchAddress = branchAddress;
+        this.accountCount = 0;
+    }
+
+    @Override
+    public Account createAccount(Customer customer, String accType, float balance) {
+        if (accountCount >= accountList.length) {
+            throw new IllegalStateException("Bank is at full capacity");
+        }
+        Account account;
+        switch (accType.toLowerCase()) {
+            case "savings":
+                account = new SavingsAccount(customer, balance);
+                break;
+            case "current":
+                account = new CurrentAccount(customer, balance, 1000.0f); // Default overdraft limit
+                break;
+            case "zerobalance":
+                account = new ZeroBalanceAccount(customer);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid account type");
+        }
+        accountList[accountCount++] = account;
+        return account;
+    }
+
+    @Override
+    public Account[] listAccounts() {
+        Account[] activeAccounts = new Account[accountCount];
+        System.arraycopy(accountList, 0, activeAccounts, 0, accountCount);
+        return activeAccounts;
+    }
+
+    @Override
+    public void calculateInterest() {
+        for (Account account : accountList) {
+            if (account instanceof SavingsAccount) {
+                SavingsAccount sa = (SavingsAccount) account;
+                float interest = sa.calculateInterest();
+                System.out.println("Interest calculated for Account " + sa.getAccountNumber() + ": " + interest);
+            }
+        }
+    }
+}
+
+// Package: app
+// File: app/BankApp.java
+package app;
+
+import bean.BankServiceProviderImpl;
+import bean.Customer;
+import bean.Account;
+import java.util.Scanner;
+
+public class BankApp {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        BankServiceProviderImpl bank = new BankServiceProviderImpl(100, "Main Branch", "123 Bank St");
+        int customerIdCounter = 1;
+
+        while (true) {
+            System.out.println("\nBanking System Menu:");
+            System.out.println("1. Create Account");
+            System.out.println("2. Deposit");
+            System.out.println("3. Withdraw");
+            System.out.println("4. Get Balance");
+            System.out.println("5. Transfer");
+            System.out.println("6. Get Account Details");
+            System.out.println("7. List Accounts");
+            System.out.println("8. Calculate Interest");
+            System.out.println("9. Exit");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
+
+            try {
+                switch (choice) {
+                    case "1": // Create Account
+                        System.out.println("Enter First Name: ");
+                        String firstName = scanner.nextLine();
+                        System.out.println("Enter Last Name: ");
+                        String lastName = scanner.nextLine();
+                        System.out.println("Enter Email: ");
+                        String email = scanner.nextLine();
+                        System.out.println("Enter Phone Number (10 digits): ");
+                        String phoneNumber = scanner.nextLine();
+                        System.out.println("Enter Address: ");
+                        String address = scanner.nextLine();
+
+                        Customer customer = new Customer(customerIdCounter++, firstName, lastName, email, phoneNumber, address);
+
+                        System.out.println("Choose Account Type:");
+                        System.out.println("1. Savings (Min Balance: 500)");
+                        System.out.println("2. Current (Overdraft Limit: 1000)");
+                        System.out.println("3. Zero Balance");
+                        System.out.print("Enter choice: ");
+                        String accTypeChoice = scanner.nextLine();
+                        String accType;
+                        float balance = 0;
+                        if (accTypeChoice.equals("1")) {
+                            accType = "savings";
+                            System.out.println("Enter Initial Balance (min 500): ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("2")) {
+                            accType = "current";
+                            System.out.println("Enter Initial Balance: ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("3")) {
+                            accType = "zerobalance";
+                        } else {
+                            throw new IllegalArgumentException("Invalid account type choice");
+                        }
+
+                        Account newAccount = bank.createAccount(customer, accType, balance);
+                        System.out.println("Account created with Account Number: " + newAccount.getAccountNumber());
+                        break;
+
+                    case "2": // Deposit
+                        System.out.println("Enter Account Number: ");
+                        long depositAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Deposit: ");
+                        float depositAmount = Float.parseFloat(scanner.nextLine());
+                        float newBalance = bank.deposit(depositAccNo, depositAmount);
+                        System.out.println("Deposit successful. New Balance: " + newBalance);
+                        break;
+
+                    case "3": // Withdraw
+                        System.out.println("Enter Account Number: ");
+                        long withdrawAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Withdraw: ");
+                        float withdrawAmount = Float.parseFloat(scanner.nextLine());
+                        newBalance = bank.withdraw(withdrawAccNo, withdrawAmount);
+                        System.out.println("Withdrawal successful. New Balance: " + newBalance);
+                        break;
+
+                    case "4": // Get Balance
+                        System.out.println("Enter Account Number: ");
+                        long balanceAccNo = Long.parseLong(scanner.nextLine());
+                        float bal = bank.getAccountBalance(balanceAccNo);
+                        System.out.println("Current Balance: " + bal);
+                        break;
+
+                    case "5": // Transfer
+                        System.out.println("Enter From Account Number: ");
+                        long fromAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter To Account Number: ");
+                        long toAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Transfer: ");
+                        float transferAmount = Float.parseFloat(scanner.nextLine());
+                        bank.transfer(fromAccNo, toAccNo, transferAmount);
+                        break;
+
+                    case "6": // Get Account Details
+                        System.out.println("Enter Account Number: ");
+                        long detailsAccNo = Long.parseLong(scanner.nextLine());
+                        Account account = bank.getAccountDetails(detailsAccNo);
+                        account.printInfo();
+                        break;
+
+                    case "7": // List Accounts
+                        Account[] accounts = bank.listAccounts();
+                        for (Account acc : accounts) {
+                            acc.printInfo();
+                            System.out.println("-------------------");
+                        }
+                        break;
+
+                    case "8": // Calculate Interest
+                        bank.calculateInterest();
+                        break;
+
+                    case "9": // Exit
+                        System.out.println("Exiting Banking System. Goodbye!");
+                        scanner.close();
+                        System.exit(0);
+
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (IllegalStateException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Invalid number format. Please enter a valid number.");
+            } catch (Exception e) {
+                System.out.println("Unexpected error: " + e.getMessage());
+            }
+        }
+    }
+}
+*********************************************************************************************************************12task**************************************************************************************
+// Package: service
+// File: service/ICustomerServiceProvider.java
+package service;
+
+import bean.Account;
+import bean.InsufficientFundException;
+import bean.InvalidAccountException;
+import bean.OverDraftLimitExceededException;
+
+public interface ICustomerServiceProvider {
+    float getAccountBalance(long accountNumber) throws InvalidAccountException;
+    float deposit(long accountNumber, float amount) throws InvalidAccountException;
+    float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    Account getAccountDetails(long accountNumber) throws InvalidAccountException;
+}
+
+// File: service/IBankServiceProvider.java
+package service;
+
+import bean.Account;
+import bean.Customer;
+
+public interface IBankServiceProvider {
+    Account createAccount(Customer customer, String accType, float balance);
+    Account[] listAccounts();
+    void calculateInterest();
+}
+
+// Package: bean
+// File: bean/Customer.java
+package bean;
+
+import java.util.regex.Pattern;
+
+class Customer {
+    private int customerId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String address;
+
+    public Customer() {
+    }
+
+    public Customer(int customerId, String firstName, String lastName, String email, String phoneNumber, String address) {
+        this.customerId = customerId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setEmail(email);
+        setPhoneNumber(phoneNumber);
+        this.address = address;
+    }
+
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) {
+        if (isValidEmail(email)) {
+            this.email = email;
+        } else {
+            throw new IllegalArgumentException("Invalid email address");
+        }
+    }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) {
+        if (isValidPhoneNumber(phoneNumber)) {
+            this.phoneNumber = phoneNumber;
+        } else {
+            throw new IllegalArgumentException("Phone number must be 10 digits");
+        }
+    }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return Pattern.matches(emailRegex, email);
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("\\d{10}");
+    }
+
+    public void printInfo() {
+        System.out.println("Customer ID: " + customerId);
+        System.out.println("First Name: " + firstName);
+        System.out.println("Last Name: " + lastName);
+        System.out.println("Email: " + email);
+        System.out.println("Phone Number: " + phoneNumber);
+        System.out.println("Address: " + address);
+    }
+}
+
+// File: bean/Account.java
+package bean;
+
+abstract class Account {
+    private long accountNumber;
+    private String accountType;
+    private float balance;
+    private Customer customer;
+    protected static long lastAccNo = 1000;
+
+    public Account() {
+        this.accountNumber = ++lastAccNo;
+    }
+
+    public Account(String accountType, float balance, Customer customer) {
+        this.accountNumber = ++lastAccNo;
+        this.accountType = accountType;
+        this.balance = balance;
+        this.customer = customer;
+    }
+
+    public long getAccountNumber() { return accountNumber; }
+    public String getAccountType() { return accountType; }
+    public float getBalance() { return balance; }
+    public void setBalance(float balance) { this.balance = balance; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    public void printInfo() {
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Balance: " + balance);
+        System.out.println("Customer Details:");
+        customer.printInfo();
+    }
+}
+
+// File: bean/SavingsAccount.java
+package bean;
+
+class SavingsAccount extends Account {
+    private float interestRate;
+    private static final float MIN_BALANCE = 500.0f;
+
+    public SavingsAccount(Customer customer, float balance) {
+        super("Savings", balance >= MIN_BALANCE ? balance : MIN_BALANCE, customer);
+        this.interestRate = 4.5f;
+        if (balance < MIN_BALANCE) {
+            System.out.println("Initial balance below 500. Set to minimum balance of 500.");
+        }
+    }
+
+    public float getInterestRate() { return interestRate; }
+    public void setInterestRate(float interestRate) { this.interestRate = interestRate; }
+
+    public float calculateInterest() {
+        float interest = getBalance() * (interestRate / 100);
+        setBalance(getBalance() + interest);
+        return interest;
+    }
+}
+
+// File: bean/CurrentAccount.java
+package bean;
+
+class CurrentAccount extends Account {
+    private float overdraftLimit;
+
+    public CurrentAccount(Customer customer, float balance, float overdraftLimit) {
+        super("Current", balance, customer);
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public float getOverdraftLimit() { return overdraftLimit; }
+    public void setOverdraftLimit(float overdraftLimit) { this.overdraftLimit = overdraftLimit; }
+}
+
+// File: bean/ZeroBalanceAccount.java
+package bean;
+
+class ZeroBalanceAccount extends Account {
+    public ZeroBalanceAccount(Customer customer) {
+        super("ZeroBalance", 0.0f, customer);
+    }
+}
+
+// File: bean/InsufficientFundException.java
+package bean;
+
+public class InsufficientFundException extends Exception {
+    public InsufficientFundException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/InvalidAccountException.java
+package bean;
+
+public class InvalidAccountException extends Exception {
+    public InvalidAccountException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/OverDraftLimitExceededException.java
+package bean;
+
+public class OverDraftLimitExceededException extends Exception {
+    public OverDraftLimitExceededException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/CustomerServiceProviderImpl.java
+package bean;
+
+import service.ICustomerServiceProvider;
+
+class CustomerServiceProviderImpl implements ICustomerServiceProvider {
+    private Account[] accountList;
+
+    public CustomerServiceProviderImpl(Account[] accountList) {
+        this.accountList = accountList;
+    }
+
+    @Override
+    public float getAccountBalance(long accountNumber) throws InvalidAccountException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account.getBalance();
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    @Override
+    public float deposit(long accountNumber, float amount) throws InvalidAccountException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount > 0) {
+                account.setBalance(account.getBalance() + amount);
+                return account.getBalance();
+            }
+            throw new IllegalArgumentException("Deposit amount must be positive");
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    @Override
+    public float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount <= 0) {
+                throw new IllegalArgumentException("Withdrawal amount must be positive");
+            }
+            if (account instanceof SavingsAccount) {
+                if (account.getBalance() - amount < 500) {
+                    throw new InsufficientFundException("Withdrawal violates minimum balance of 500 for Savings Account");
+                }
+            } else if (account instanceof CurrentAccount) {
+                CurrentAccount ca = (CurrentAccount) account;
+                if (account.getBalance() - amount < -ca.getOverdraftLimit()) {
+                    throw new OverDraftLimitExceededException("Withdrawal exceeds overdraft limit of " + ca.getOverdraftLimit());
+                }
+            } else if (account.getBalance() < amount) {
+                throw new InsufficientFundException("Insufficient funds in account " + accountNumber);
+            }
+            account.setBalance(account.getBalance() - amount);
+            return account.getBalance();
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    @Override
+    public void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        Account fromAccount = findAccount(fromAccountNumber);
+        Account toAccount = findAccount(toAccountNumber);
+        if (fromAccount == null) {
+            throw new InvalidAccountException("From account number " + fromAccountNumber + " not found");
+        }
+        if (toAccount == null) {
+            throw new InvalidAccountException("To account number " + toAccountNumber + " not found");
+        }
+        float fromBalance = withdraw(fromAccountNumber, amount);
+        float toBalance = deposit(toAccountNumber, amount);
+        System.out.println("Transfer successful. New balances: " + fromAccountNumber + ": " + fromBalance + ", " + toAccountNumber + ": " + toBalance);
+    }
+
+    @Override
+    public Account getAccountDetails(long accountNumber) throws InvalidAccountException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account;
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    protected Account findAccount(long accountNumber) {
+        for (Account account : accountList) {
+            if (account != null && account.getAccountNumber() == accountNumber) {
+                return account;
+            }
+        }
+        return null;
+    }
+}
+
+// File: bean/BankServiceProviderImpl.java
+package bean;
+
+import service.IBankServiceProvider;
+
+class BankServiceProviderImpl extends CustomerServiceProviderImpl implements IBankServiceProvider {
+    private Account[] accountList;
+    private String branchName;
+    private String branchAddress;
+    private int accountCount;
+
+    public BankServiceProviderImpl(int maxAccounts, String branchName, String branchAddress) {
+        super(new Account[maxAccounts]);
+        this.accountList = new Account[maxAccounts];
+        this.branchName = branchName;
+        this.branchAddress = branchAddress;
+        this.accountCount = 0;
+    }
+
+    @Override
+    public Account createAccount(Customer customer, String accType, float balance) {
+        if (accountCount >= accountList.length) {
+            throw new IllegalStateException("Bank is at full capacity");
+        }
+        Account account;
+        switch (accType.toLowerCase()) {
+            case "savings":
+                account = new SavingsAccount(customer, balance);
+                break;
+            case "current":
+                account = new CurrentAccount(customer, balance, 1000.0f); // Default overdraft limit
+                break;
+            case "zerobalance":
+                account = new ZeroBalanceAccount(customer);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid account type");
+        }
+        accountList[accountCount++] = account;
+        return account;
+    }
+
+    @Override
+    public Account[] listAccounts() {
+        Account[] activeAccounts = new Account[accountCount];
+        System.arraycopy(accountList, 0, activeAccounts, 0, accountCount);
+        return activeAccounts;
+    }
+
+    @Override
+    public void calculateInterest() {
+        for (Account account : accountList) {
+            if (account instanceof SavingsAccount) {
+                SavingsAccount sa = (SavingsAccount) account;
+                float interest = sa.calculateInterest();
+                System.out.println("Interest calculated for Account " + sa.getAccountNumber() + ": " + interest);
+            }
+        }
+    }
+}
+
+// Package: app
+// File: app/BankApp.java
+package app;
+
+import bean.BankServiceProviderImpl;
+import bean.Customer;
+import bean.Account;
+import bean.InsufficientFundException;
+import bean.InvalidAccountException;
+import bean.OverDraftLimitExceededException;
+import java.util.Scanner;
+
+public class BankApp {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        BankServiceProviderImpl bank = new BankServiceProviderImpl(100, "Main Branch", "123 Bank St");
+        int customerIdCounter = 1;
+
+        while (true) {
+            System.out.println("\nBanking System Menu:");
+            System.out.println("1. Create Account");
+            System.out.println("2. Deposit");
+            System.out.println("3. Withdraw");
+            System.out.println("4. Get Balance");
+            System.out.println("5. Transfer");
+            System.out.println("6. Get Account Details");
+            System.out.println("7. List Accounts");
+            System.out.println("8. Calculate Interest");
+            System.out.println("9. Exit");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
+
+            try {
+                switch (choice) {
+                    case "1": // Create Account
+                        System.out.println("Enter First Name: ");
+                        String firstName = scanner.nextLine();
+                        System.out.println("Enter Last Name: ");
+                        String lastName = scanner.nextLine();
+                        System.out.println("Enter Email: ");
+                        String email = scanner.nextLine();
+                        System.out.println("Enter Phone Number (10 digits): ");
+                        String phoneNumber = scanner.nextLine();
+                        System.out.println("Enter Address: ");
+                        String address = scanner.nextLine();
+
+                        Customer customer = new Customer(customerIdCounter++, firstName, lastName, email, phoneNumber, address);
+
+                        System.out.println("Choose Account Type:");
+                        System.out.println("1. Savings (Min Balance: 500)");
+                        System.out.println("2. Current (Overdraft Limit: 1000)");
+                        System.out.println("3. Zero Balance");
+                        System.out.print("Enter choice: ");
+                        String accTypeChoice = scanner.nextLine();
+                        String accType;
+                        float balance = 0;
+                        if (accTypeChoice.equals("1")) {
+                            accType = "savings";
+                            System.out.println("Enter Initial Balance (min 500): ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("2")) {
+                            accType = "current";
+                            System.out.println("Enter Initial Balance: ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("3")) {
+                            accType = "zerobalance";
+                        } else {
+                            throw new IllegalArgumentException("Invalid account type choice");
+                        }
+
+                        Account newAccount = bank.createAccount(customer, accType, balance);
+                        System.out.println("Account created with Account Number: " + newAccount.getAccountNumber());
+                        break;
+
+                    case "2": // Deposit
+                        System.out.println("Enter Account Number: ");
+                        long depositAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Deposit: ");
+                        float depositAmount = Float.parseFloat(scanner.nextLine());
+                        float newBalance = bank.deposit(depositAccNo, depositAmount);
+                        System.out.println("Deposit successful. New Balance: " + newBalance);
+                        break;
+
+                    case "3": // Withdraw
+                        System.out.println("Enter Account Number: ");
+                        long withdrawAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Withdraw: ");
+                        float withdrawAmount = Float.parseFloat(scanner.nextLine());
+                        newBalance = bank.withdraw(withdrawAccNo, withdrawAmount);
+                        System.out.println("Withdrawal successful. New Balance: " + newBalance);
+                        break;
+
+                    case "4": // Get Balance
+                        System.out.println("Enter Account Number: ");
+                        long balanceAccNo = Long.parseLong(scanner.nextLine());
+                        float bal = bank.getAccountBalance(balanceAccNo);
+                        System.out.println("Current Balance: " + bal);
+                        break;
+
+                    case "5": // Transfer
+                        System.out.println("Enter From Account Number: ");
+                        long fromAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter To Account Number: ");
+                        long toAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Transfer: ");
+                        float transferAmount = Float.parseFloat(scanner.nextLine());
+                        bank.transfer(fromAccNo, toAccNo, transferAmount);
+                        break;
+
+                    case "6": // Get Account Details
+                        System.out.println("Enter Account Number: ");
+                        long detailsAccNo = Long.parseLong(scanner.nextLine());
+                        Account account = bank.getAccountDetails(detailsAccNo);
+                        account.printInfo();
+                        break;
+
+                    case "7": // List Accounts
+                        Account[] accounts = bank.listAccounts();
+                        for (Account acc : accounts) {
+                            acc.printInfo();
+                            System.out.println("-------------------");
+                        }
+                        break;
+
+                    case "8": // Calculate Interest
+                        bank.calculateInterest();
+                        break;
+
+                    case "9": // Exit
+                        System.out.println("Exiting Banking System. Goodbye!");
+                        scanner.close();
+                        System.exit(0);
+
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (InvalidAccountException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (InsufficientFundException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (OverDraftLimitExceededException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (IllegalStateException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Invalid number format. Please enter a valid number.");
+            } catch (NullPointerException e) {
+                System.out.println("Error: Null pointer encountered. Please check input data.");
+            } catch (Exception e) {
+                System.out.println("Unexpected error: " + e.getMessage());
+            }
+        }
+    }
+}
+***************************************************************************************************Task 13***************************************************************************************************
+// Package: service
+// File: service/ICustomerServiceProvider.java
+package service;
+
+import bean.Account;
+import bean.InsufficientFundException;
+import bean.InvalidAccountException;
+import bean.OverDraftLimitExceededException;
+
+public interface ICustomerServiceProvider {
+    float getAccountBalance(long accountNumber) throws InvalidAccountException;
+    float deposit(long accountNumber, float amount) throws InvalidAccountException;
+    float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    Account getAccountDetails(long accountNumber) throws InvalidAccountException;
+}
+
+// File: service/IBankServiceProvider.java
+package service;
+
+import bean.Account;
+import bean.Customer;
+
+public interface IBankServiceProvider {
+    Account createAccount(Customer customer, String accType, float balance);
+    Account[] listAccounts();
+    void calculateInterest();
+}
+
+// Package: bean
+// File: bean/Customer.java
+package bean;
+
+import java.util.regex.Pattern;
+
+class Customer {
+    private int customerId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String address;
+
+    public Customer() {
+    }
+
+    public Customer(int customerId, String firstName, String lastName, String email, String phoneNumber, String address) {
+        this.customerId = customerId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setEmail(email);
+        setPhoneNumber(phoneNumber);
+        this.address = address;
+    }
+
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) {
+        if (isValidEmail(email)) {
+            this.email = email;
+        } else {
+            throw new IllegalArgumentException("Invalid email address");
+        }
+    }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) {
+        if (isValidPhoneNumber(phoneNumber)) {
+            this.phoneNumber = phoneNumber;
+        } else {
+            throw new IllegalArgumentException("Phone number must be 10 digits");
+        }
+    }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return Pattern.matches(emailRegex, email);
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("\\d{10}");
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    public void printInfo() {
+        System.out.println("Customer ID: " + customerId);
+        System.out.println("First Name: " + firstName);
+        System.out.println("Last Name: " + lastName);
+        System.out.println("Email: " + email);
+        System.out.println("Phone Number: " + phoneNumber);
+        System.out.println("Address: " + address);
+    }
+}
+
+// File: bean/Account.java
+package bean;
+
+abstract class Account {
+    private long accountNumber;
+    private String accountType;
+    private float balance;
+    private Customer customer;
+    protected static long lastAccNo = 1000;
+
+    public Account() {
+        this.accountNumber = ++lastAccNo;
+    }
+
+    public Account(String accountType, float balance, Customer customer) {
+        this.accountNumber = ++lastAccNo;
+        this.accountType = accountType;
+        this.balance = balance;
+        this.customer = customer;
+    }
+
+    public long getAccountNumber() { return accountNumber; }
+    public String getAccountType() { return accountType; }
+    public float getBalance() { return balance; }
+    public void setBalance(float balance) { this.balance = balance; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    public void printInfo() {
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Balance: " + balance);
+        System.out.println("Customer Details:");
+        customer.printInfo();
+    }
+}
+
+// File: bean/SavingsAccount.java
+package bean;
+
+class SavingsAccount extends Account {
+    private float interestRate;
+    private static final float MIN_BALANCE = 500.0f;
+
+    public SavingsAccount(Customer customer, float balance) {
+        super("Savings", balance >= MIN_BALANCE ? balance : MIN_BALANCE, customer);
+        this.interestRate = 4.5f;
+        if (balance < MIN_BALANCE) {
+            System.out.println("Initial balance below 500. Set to minimum balance of 500.");
+        }
+    }
+
+    public float getInterestRate() { return interestRate; }
+    public void setInterestRate(float interestRate) { this.interestRate = interestRate; }
+
+    public float calculateInterest() {
+        float interest = getBalance() * (interestRate / 100);
+        setBalance(getBalance() + interest);
+        return interest;
+    }
+}
+
+// File: bean/CurrentAccount.java
+package bean;
+
+class CurrentAccount extends Account {
+    private float overdraftLimit;
+
+    public CurrentAccount(Customer customer, float balance, float overdraftLimit) {
+        super("Current", balance, customer);
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public float getOverdraftLimit() { return overdraftLimit; }
+    public void setOverdraftLimit(float overdraftLimit) { this.overdraftLimit = overdraftLimit; }
+}
+
+// File: bean/ZeroBalanceAccount.java
+package bean;
+
+class ZeroBalanceAccount extends Account {
+    public ZeroBalanceAccount(Customer customer) {
+        super("ZeroBalance", 0.0f, customer);
+    }
+}
+
+// File: bean/InsufficientFundException.java
+package bean;
+
+public class InsufficientFundException extends Exception {
+    public InsufficientFundException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/InvalidAccountException.java
+package bean;
+
+public class InvalidAccountException extends Exception {
+    public InvalidAccountException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/OverDraftLimitExceededException.java
+package bean;
+
+public class OverDraftLimitExceededException extends Exception {
+    public OverDraftLimitExceededException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/CustomerServiceProviderImpl.java
+package bean;
+
+import service.ICustomerServiceProvider;
+
+class CustomerServiceProviderImpl implements ICustomerServiceProvider {
+    protected Account[] accountList; // Used for array-based implementation
+
+    public CustomerServiceProviderImpl(Account[] accountList) {
+        this.accountList = accountList;
+    }
+
+    @Override
+    public float getAccountBalance(long accountNumber) throws InvalidAccountException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account.getBalance();
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    @Override
+    public float deposit(long accountNumber, float amount) throws InvalidAccountException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount > 0) {
+                account.setBalance(account.getBalance() + amount);
+                return account.getBalance();
+            }
+            throw new IllegalArgumentException("Deposit amount must be positive");
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    @Override
+    public float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            if (amount <= 0) {
+                throw new IllegalArgumentException("Withdrawal amount must be positive");
+            }
+            if (account instanceof SavingsAccount) {
+                if (account.getBalance() - amount < 500) {
+                    throw new InsufficientFundException("Withdrawal violates minimum balance of 500 for Savings Account");
+                }
+            } else if (account instanceof CurrentAccount) {
+                CurrentAccount ca = (CurrentAccount) account;
+                if (account.getBalance() - amount < -ca.getOverdraftLimit()) {
+                    throw new OverDraftLimitExceededException("Withdrawal exceeds overdraft limit of " + ca.getOverdraftLimit());
+                }
+            } else if (account.getBalance() < amount) {
+                throw new InsufficientFundException("Insufficient funds in account " + accountNumber);
+            }
+            account.setBalance(account.getBalance() - amount);
+            return account.getBalance();
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    @Override
+    public void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        Account fromAccount = findAccount(fromAccountNumber);
+        Account toAccount = findAccount(toAccountNumber);
+        if (fromAccount == null) {
+            throw new InvalidAccountException("From account number " + fromAccountNumber + " not found");
+        }
+        if (toAccount == null) {
+            throw new InvalidAccountException("To account number " + toAccountNumber + " not found");
+        }
+        float fromBalance = withdraw(fromAccountNumber, amount);
+        float toBalance = deposit(toAccountNumber, amount);
+        System.out.println("Transfer successful. New balances: " + fromAccountNumber + ": " + fromBalance + ", " + toAccountNumber + ": " + toBalance);
+    }
+
+    @Override
+    public Account getAccountDetails(long accountNumber) throws InvalidAccountException {
+        Account account = findAccount(accountNumber);
+        if (account != null) {
+            return account;
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found");
+    }
+
+    protected Account findAccount(long accountNumber) {
+        for (Account account : accountList) {
+            if (account != null && account.getAccountNumber() == accountNumber) {
+                return account;
+            }
+        }
+        return null;
+    }
+}
+
+// File: bean/BankServiceProviderImpl.java (with List, Set, and HashMap implementations)
+package bean;
+
+import service.IBankServiceProvider;
+import java.util.*;
+
+class BankServiceProviderImpl extends CustomerServiceProviderImpl implements IBankServiceProvider {
+    // Uncomment one of the following implementations based on the desired collection type
+
+    // 1. List Implementation
+    private List<Account> accountList = new ArrayList<>();
+    
+    // 2. Set Implementation (with Comparator for sorting by customer name)
+    // private Set<Account> accountList = new TreeSet<>(new AccountComparator());
+    
+    // 3. HashMap Implementation (key: accountNumber, value: Account)
+    // private Map<Long, Account> accountList = new HashMap<>();
+
+    private String branchName;
+    private String branchAddress;
+
+    public BankServiceProviderImpl(String branchName, String branchAddress) {
+        super(null); // Not using array in this implementation
+        this.branchName = branchName;
+        this.branchAddress = branchAddress;
+    }
+
+    @Override
+    public Account createAccount(Customer customer, String accType, float balance) {
+        Account account;
+        switch (accType.toLowerCase()) {
+            case "savings":
+                account = new SavingsAccount(customer, balance);
+                break;
+            case "current":
+                account = new CurrentAccount(customer, balance, 1000.0f); // Default overdraft limit
+                break;
+            case "zerobalance":
+                account = new ZeroBalanceAccount(customer);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid account type");
+        }
+        
+        // Add account based on collection type
+        // 1. List
+        accountList.add(account);
+        
+        // 2. Set (duplicates avoided by TreeSet's natural ordering or equals/hashCode)
+        // accountList.add(account); // TreeSet ensures no duplicates
+        
+        // 3. HashMap
+        // accountList.put(account.getAccountNumber(), account);
+
+        return account;
+    }
+
+    @Override
+    public Account[] listAccounts() {
+        // Convert collection to array based on type
+        // 1. List
+        return accountList.toArray(new Account[0]);
+        
+        // 2. Set (sorted by customer name due to Comparator)
+        // return accountList.toArray(new Account[0]);
+        
+        // 3. HashMap
+        // return accountList.values().toArray(new Account[0]);
+    }
+
+    @Override
+    public void calculateInterest() {
+        // Iterate based on collection type
+        // 1. List
+        for (Account account : accountList) {
+            if (account instanceof SavingsAccount) {
+                SavingsAccount sa = (SavingsAccount) account;
+                float interest = sa.calculateInterest();
+                System.out.println("Interest calculated for Account " + sa.getAccountNumber() + ": " + interest);
+            }
+        }
+        
+        // 2. Set
+        // for (Account account : accountList) {
+        //     if (account instanceof SavingsAccount) {
+        //         SavingsAccount sa = (SavingsAccount) account;
+        //         float interest = sa.calculateInterest();
+        //         System.out.println("Interest calculated for Account " + sa.getAccountNumber() + ": " + interest);
+        //     }
+        // }
+        
+        // 3. HashMap
+        // for (Account account : accountList.values()) {
+        //     if (account instanceof SavingsAccount) {
+        //         SavingsAccount sa = (SavingsAccount) account;
+        //         float interest = sa.calculateInterest();
+        //         System.out.println("Interest calculated for Account " + sa.getAccountNumber() + ": " + interest);
+        //     }
+        // }
+    }
+
+    // Override findAccount for collection-specific lookup
+    @Override
+    protected Account findAccount(long accountNumber) {
+        // 1. List
+        for (Account account : accountList) {
+            if (account.getAccountNumber() == accountNumber) {
+                return account;
+            }
+        }
+        
+        // 2. Set (using iteration, though TreeSet could use a custom search)
+        // for (Account account : accountList) {
+        //     if (account.getAccountNumber() == accountNumber) {
+        //         return account;
+        //     }
+        // }
+        
+        // 3. HashMap (direct lookup by key)
+        // return accountList.get(accountNumber);
+
+        return null;
+    }
+}
+
+// File: bean/AccountComparator.java (for Set implementation)
+package bean;
+
+import java.util.Comparator;
+
+class AccountComparator implements Comparator<Account> {
+    @Override
+    public int compare(Account a1, Account a2) {
+        return a1.getCustomer().getFullName().compareTo(a2.getCustomer().getFullName());
+    }
+}
+
+// Package: app
+// File: app/BankApp.java
+package app;
+
+import bean.BankServiceProviderImpl;
+import bean.Customer;
+import bean.Account;
+import bean.InsufficientFundException;
+import bean.InvalidAccountException;
+import bean.OverDraftLimitExceededException;
+import java.util.Scanner;
+
+public class BankApp {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        BankServiceProviderImpl bank = new BankServiceProviderImpl("Main Branch", "123 Bank St");
+        int customerIdCounter = 1;
+
+        while (true) {
+            System.out.println("\nBanking System Menu:");
+            System.out.println("1. Create Account");
+            System.out.println("2. Deposit");
+            System.out.println("3. Withdraw");
+            System.out.println("4. Get Balance");
+            System.out.println("5. Transfer");
+            System.out.println("6. Get Account Details");
+            System.out.println("7. List Accounts");
+            System.out.println("8. Calculate Interest");
+            System.out.println("9. Exit");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
+
+            try {
+                switch (choice) {
+                    case "1": // Create Account
+                        System.out.println("Enter First Name: ");
+                        String firstName = scanner.nextLine();
+                        System.out.println("Enter Last Name: ");
+                        String lastName = scanner.nextLine();
+                        System.out.println("Enter Email: ");
+                        String email = scanner.nextLine();
+                        System.out.println("Enter Phone Number (10 digits): ");
+                        String phoneNumber = scanner.nextLine();
+                        System.out.println("Enter Address: ");
+                        String address = scanner.nextLine();
+
+                        Customer customer = new Customer(customerIdCounter++, firstName, lastName, email, phoneNumber, address);
+
+                        System.out.println("Choose Account Type:");
+                        System.out.println("1. Savings (Min Balance: 500)");
+                        System.out.println("2. Current (Overdraft Limit: 1000)");
+                        System.out.println("3. Zero Balance");
+                        System.out.print("Enter choice: ");
+                        String accTypeChoice = scanner.nextLine();
+                        String accType;
+                        float balance = 0;
+                        if (accTypeChoice.equals("1")) {
+                            accType = "savings";
+                            System.out.println("Enter Initial Balance (min 500): ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("2")) {
+                            accType = "current";
+                            System.out.println("Enter Initial Balance: ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("3")) {
+                            accType = "zerobalance";
+                        } else {
+                            throw new IllegalArgumentException("Invalid account type choice");
+                        }
+
+                        Account newAccount = bank.createAccount(customer, accType, balance);
+                        System.out.println("Account created with Account Number: " + newAccount.getAccountNumber());
+                        break;
+
+                    case "2": // Deposit
+                        System.out.println("Enter Account Number: ");
+                        long depositAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Deposit: ");
+                        float depositAmount = Float.parseFloat(scanner.nextLine());
+                        float newBalance = bank.deposit(depositAccNo, depositAmount);
+                        System.out.println("Deposit successful. New Balance: " + newBalance);
+                        break;
+
+                    case "3": // Withdraw
+                        System.out.println("Enter Account Number: ");
+                        long withdrawAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Withdraw: ");
+                        float withdrawAmount = Float.parseFloat(scanner.nextLine());
+                        newBalance = bank.withdraw(withdrawAccNo, withdrawAmount);
+                        System.out.println("Withdrawal successful. New Balance: " + newBalance);
+                        break;
+
+                    case "4": // Get Balance
+                        System.out.println("Enter Account Number: ");
+                        long balanceAccNo = Long.parseLong(scanner.nextLine());
+                        float bal = bank.getAccountBalance(balanceAccNo);
+                        System.out.println("Current Balance: " + bal);
+                        break;
+
+                    case "5": // Transfer
+                        System.out.println("Enter From Account Number: ");
+                        long fromAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter To Account Number: ");
+                        long toAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Transfer: ");
+                        float transferAmount = Float.parseFloat(scanner.nextLine());
+                        bank.transfer(fromAccNo, toAccNo, transferAmount);
+                        break;
+
+                    case "6": // Get Account Details
+                        System.out.println("Enter Account Number: ");
+                        long detailsAccNo = Long.parseLong(scanner.nextLine());
+                        Account account = bank.getAccountDetails(detailsAccNo);
+                        account.printInfo();
+                        break;
+
+                    case "7": // List Accounts
+                        Account[] accounts = bank.listAccounts();
+                        for (Account acc : accounts) {
+                            acc.printInfo();
+                            System.out.println("-------------------");
+                        }
+                        break;
+
+                    case "8": // Calculate Interest
+                        bank.calculateInterest();
+                        break;
+
+                    case "9": // Exit
+                        System.out.println("Exiting Banking System. Goodbye!");
+                        scanner.close();
+                        System.exit(0);
+
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (InvalidAccountException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (InsufficientFundException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (OverDraftLimitExceededException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Invalid number format. Please enter a valid number.");
+            } catch (NullPointerException e) {
+                System.out.println("Error: Null pointer encountered. Please check input data.");
+            } catch (Exception e) {
+                System.out.println("Unexpected error: " + e.getMessage());
+            }
+        }
+    }
+}
+**************************************************************************************************************Task no 14*****************************************************************************************
+CREATE DATABASE HMBank;
+USE HMBank;
+
+CREATE TABLE Customers (
+    customer_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    phone_number VARCHAR(10),
+    address VARCHAR(255)
+);
+
+CREATE TABLE Accounts (
+    account_id BIGINT PRIMARY KEY,
+    customer_id INT,
+    account_type VARCHAR(20),
+    balance FLOAT,
+    interest_rate FLOAT DEFAULT 0,
+    overdraft_limit FLOAT DEFAULT 0,
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+);
+
+CREATE TABLE Transactions (
+    transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    account_id BIGINT,
+    description VARCHAR(255),
+    transaction_date DATETIME,
+    transaction_type VARCHAR(20),
+    amount FLOAT,
+    FOREIGN KEY (account_id) REFERENCES Accounts(account_id)
+);
+// Package: service
+// File: service/ICustomerServiceProvider.java
+package service;
+
+import bean.Account;
+import bean.InsufficientFundException;
+import bean.InvalidAccountException;
+import bean.OverDraftLimitExceededException;
+import bean.Transaction;
+
+import java.util.Date;
+import java.util.List;
+
+interface ICustomerServiceProvider {
+    float getAccountBalance(long accountNumber) throws InvalidAccountException;
+    float deposit(long accountNumber, float amount) throws InvalidAccountException;
+    float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    Account getAccountDetails(long accountNumber) throws InvalidAccountException;
+    List<Transaction> getTransactions(long accountNumber, Date fromDate, Date toDate) throws InvalidAccountException;
+}
+
+// File: service/IBankServiceProvider.java
+package service;
+
+import bean.Account;
+import bean.Customer;
+
+interface IBankServiceProvider {
+    Account createAccount(Customer customer, String accType, float balance);
+    Account[] listAccounts();
+    Account getAccountDetails(long accountNumber);
+    void calculateInterest();
+}
+
+// File: service/IBankRepository.java
+package service;
+
+import bean.Account;
+import bean.Customer;
+import bean.InsufficientFundException;
+import bean.InvalidAccountException;
+import bean.OverDraftLimitExceededException;
+import bean.Transaction;
+
+import java.util.Date;
+import java.util.List;
+
+interface IBankRepository {
+    void createAccount(Customer customer, long accNo, String accType, float balance);
+    List<Account> listAccounts();
+    void calculateInterest();
+    float getAccountBalance(long accountNumber) throws InvalidAccountException;
+    float deposit(long accountNumber, float amount) throws InvalidAccountException;
+    float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException;
+    Account getAccountDetails(long accountNumber) throws InvalidAccountException;
+    List<Transaction> getTransactions(long accountNumber, Date fromDate, Date toDate) throws InvalidAccountException;
+}
+
+// Package: bean
+// File: bean/Customer.java
+package bean;
+
+import java.util.regex.Pattern;
+
+class Customer {
+    private int customerId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String address;
+
+    public Customer() {
+    }
+
+    public Customer(int customerId, String firstName, String lastName, String email, String phoneNumber, String address) {
+        this.customerId = customerId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setEmail(email);
+        setPhoneNumber(phoneNumber);
+        this.address = address;
+    }
+
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) {
+        if (isValidEmail(email)) this.email = email;
+        else throw new IllegalArgumentException("Invalid email address");
+    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) {
+        if (isValidPhoneNumber(phoneNumber)) this.phoneNumber = phoneNumber;
+        else throw new IllegalArgumentException("Phone number must be 10 digits");
+    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return Pattern.matches(emailRegex, email);
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("\\d{10}");
+    }
+
+    public void printInfo() {
+        System.out.println("Customer ID: " + customerId);
+        System.out.println("First Name: " + firstName);
+        System.out.println("Last Name: " + lastName);
+        System.out.println("Email: " + email);
+        System.out.println("Phone Number: " + phoneNumber);
+        System.out.println("Address: " + address);
+    }
+}
+
+// File: bean/Account.java
+package bean;
+
+abstract class Account {
+    private long accountNumber;
+    private String accountType;
+    private float balance;
+    private Customer customer;
+    protected static long lastAccNo = 1000;
+
+    public Account() {
+        this.accountNumber = ++lastAccNo;
+    }
+
+    public Account(String accountType, float balance, Customer customer) {
+        this.accountNumber = ++lastAccNo;
+        this.accountType = accountType;
+        this.balance = balance;
+        this.customer = customer;
+    }
+
+    public long getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(long accountNumber) { this.accountNumber = accountNumber; }
+    public String getAccountType() { return accountType; }
+    public float getBalance() { return balance; }
+    public void setBalance(float balance) { this.balance = balance; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    public void printInfo() {
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Balance: " + balance);
+        System.out.println("Customer Details:");
+        customer.printInfo();
+    }
+}
+
+// File: bean/SavingsAccount.java
+package bean;
+
+class SavingsAccount extends Account {
+    private float interestRate;
+    private static final float MIN_BALANCE = 500.0f;
+
+    public SavingsAccount(Customer customer, float balance) {
+        super("Savings", balance >= MIN_BALANCE ? balance : MIN_BALANCE, customer);
+        this.interestRate = 4.5f;
+        if (balance < MIN_BALANCE) {
+            System.out.println("Initial balance below 500. Set to minimum balance of 500.");
+        }
+    }
+
+    public float getInterestRate() { return interestRate; }
+    public void setInterestRate(float interestRate) { this.interestRate = interestRate; }
+
+    public float calculateInterest() {
+        float interest = getBalance() * (interestRate / 100);
+        setBalance(getBalance() + interest);
+        return interest;
+    }
+}
+
+// File: bean/CurrentAccount.java
+package bean;
+
+class CurrentAccount extends Account {
+    private float overdraftLimit;
+
+    public CurrentAccount(Customer customer, float balance, float overdraftLimit) {
+        super("Current", balance, customer);
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public float getOverdraftLimit() { return overdraftLimit; }
+    public void setOverdraftLimit(float overdraftLimit) { this.overdraftLimit = overdraftLimit; }
+}
+
+// File: bean/ZeroBalanceAccount.java
+package bean;
+
+class ZeroBalanceAccount extends Account {
+    public ZeroBalanceAccount(Customer customer) {
+        super("ZeroBalance", 0.0f, customer);
+    }
+}
+
+// File: bean/Transaction.java
+package bean;
+
+import java.util.Date;
+
+class Transaction {
+    private int transactionId;
+    private long accountId;
+    private String description;
+    private Date transactionDate;
+    private String transactionType;
+    private float amount;
+
+    public Transaction() {
+    }
+
+    public Transaction(int transactionId, long accountId, String description, Date transactionDate, String transactionType, float amount) {
+        this.transactionId = transactionId;
+        this.accountId = accountId;
+        this.description = description;
+        this.transactionDate = transactionDate;
+        this.transactionType = transactionType;
+        this.amount = amount;
+    }
+
+    public int getTransactionId() { return transactionId; }
+    public void setTransactionId(int transactionId) { this.transactionId = transactionId; }
+    public long getAccountId() { return accountId; }
+    public void setAccountId(long accountId) { this.accountId = accountId; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public Date getTransactionDate() { return transactionDate; }
+    public void setTransactionDate(Date transactionDate) { this.transactionDate = transactionDate; }
+    public String getTransactionType() { return transactionType; }
+    public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
+    public float getAmount() { return amount; }
+    public void setAmount(float amount) { this.amount = amount; }
+
+    public void printInfo() {
+        System.out.println("Transaction ID: " + transactionId);
+        System.out.println("Account ID: " + accountId);
+        System.out.println("Description: " + description);
+        System.out.println("Date: " + transactionDate);
+        System.out.println("Type: " + transactionType);
+        System.out.println("Amount: " + amount);
+    }
+}
+
+// File: bean/InsufficientFundException.java
+package bean;
+
+public class InsufficientFundException extends Exception {
+    public InsufficientFundException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/InvalidAccountException.java
+package bean;
+
+public class InvalidAccountException extends Exception {
+    public InvalidAccountException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/OverDraftLimitExceededException.java
+package bean;
+
+public class OverDraftLimitExceededException extends Exception {
+    public OverDraftLimitExceededException(String message) {
+        super(message);
+    }
+}
+
+// File: bean/CustomerServiceProviderImpl.java
+package bean;
+
+import service.ICustomerServiceProvider;
+import service.IBankRepository;
+
+import java.util.Date;
+import java.util.List;
+
+class CustomerServiceProviderImpl implements ICustomerServiceProvider {
+    private IBankRepository bankRepository;
+
+    public CustomerServiceProviderImpl(IBankRepository bankRepository) {
+        this.bankRepository = bankRepository;
+    }
+
+    @Override
+    public float getAccountBalance(long accountNumber) throws InvalidAccountException {
+        return bankRepository.getAccountBalance(accountNumber);
+    }
+
+    @Override
+    public float deposit(long accountNumber, float amount) throws InvalidAccountException {
+        return bankRepository.deposit(accountNumber, amount);
+    }
+
+    @Override
+    public float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        return bankRepository.withdraw(accountNumber, amount);
+    }
+
+    @Override
+    public void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        bankRepository.transfer(fromAccountNumber, toAccountNumber, amount);
+    }
+
+    @Override
+    public Account getAccountDetails(long accountNumber) throws InvalidAccountException {
+        return bankRepository.getAccountDetails(accountNumber);
+    }
+
+    @Override
+    public List<Transaction> getTransactions(long accountNumber, Date fromDate, Date toDate) throws InvalidAccountException {
+        return bankRepository.getTransactions(accountNumber, fromDate, toDate);
+    }
+}
+
+// File: bean/BankServiceProviderImpl.java
+package bean;
+
+import service.IBankServiceProvider;
+import service.IBankRepository;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class BankServiceProviderImpl extends CustomerServiceProviderImpl implements IBankServiceProvider {
+    private List<Account> accountList = new ArrayList<>();
+    private List<Transaction> transactionList = new ArrayList<>();
+    private String branchName;
+    private String branchAddress;
+    private IBankRepository bankRepository;
+
+    public BankServiceProviderImpl(String branchName, String branchAddress, IBankRepository bankRepository) {
+        super(bankRepository);
+        this.branchName = branchName;
+        this.branchAddress = branchAddress;
+        this.bankRepository = bankRepository;
+    }
+
+    @Override
+    public Account createAccount(Customer customer, String accType, float balance) {
+        Account account;
+        switch (accType.toLowerCase()) {
+            case "savings":
+                account = new SavingsAccount(customer, balance);
+                break;
+            case "current":
+                account = new CurrentAccount(customer, balance, 1000.0f);
+                break;
+            case "zerobalance":
+                account = new ZeroBalanceAccount(customer);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid account type");
+        }
+        bankRepository.createAccount(customer, account.getAccountNumber(), accType, balance);
+        accountList.add(account);
+        return account;
+    }
+
+    @Override
+    public Account[] listAccounts() {
+        accountList = bankRepository.listAccounts();
+        return accountList.toArray(new Account[0]);
+    }
+
+    @Override
+    public Account getAccountDetails(long accountNumber) {
+        try {
+            return bankRepository.getAccountDetails(accountNumber);
+        } catch (InvalidAccountException e) {
+            System.out.println("Error: " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public void calculateInterest() {
+        bankRepository.calculateInterest();
+    }
+}
+
+// File: bean/BankRepositoryImpl.java
+package bean;
+
+import service.IBankRepository;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+class BankRepositoryImpl implements IBankRepository {
+    private Connection getConnection() throws SQLException {
+        return DBUtil.getDBConn();
+    }
+
+    @Override
+    public void createAccount(Customer customer, long accNo, String accType, float balance) {
+        try (Connection conn = getConnection()) {
+            // Insert customer
+            String customerSql = "INSERT INTO Customers (first_name, last_name, email, phone_number, address) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement customerStmt = conn.prepareStatement(customerSql, Statement.RETURN_GENERATED_KEYS);
+            customerStmt.setString(1, customer.getFirstName());
+            customerStmt.setString(2, customer.getLastName());
+            customerStmt.setString(3, customer.getEmail());
+            customerStmt.setString(4, customer.getPhoneNumber());
+            customerStmt.setString(5, customer.getAddress());
+            customerStmt.executeUpdate();
+            ResultSet rs = customerStmt.getGeneratedKeys();
+            if (rs.next()) {
+                customer.setCustomerId(rs.getInt(1));
+            }
+
+            // Insert account
+            String accountSql = "INSERT INTO Accounts (account_id, customer_id, account_type, balance, interest_rate, overdraft_limit) VALUES (?, ?, ?, ?, ?, ?)";
+            PreparedStatement accountStmt = conn.prepareStatement(accountSql);
+            accountStmt.setLong(1, accNo);
+            accountStmt.setInt(2, customer.getCustomerId());
+            accountStmt.setString(3, accType);
+            accountStmt.setFloat(4, balance);
+            if (accType.equalsIgnoreCase("savings")) {
+                accountStmt.setFloat(5, 4.5f);
+                accountStmt.setFloat(6, 0);
+            } else if (accType.equalsIgnoreCase("current")) {
+                accountStmt.setFloat(5, 0);
+                accountStmt.setFloat(6, 1000.0f);
+            } else {
+                accountStmt.setFloat(5, 0);
+                accountStmt.setFloat(6, 0);
+            }
+            accountStmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error creating account: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Account> listAccounts() {
+        List<Account> accounts = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            String sql = "SELECT a.*, c.* FROM Accounts a JOIN Customers c ON a.customer_id = c.customer_id";
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                Customer customer = new Customer(rs.getInt("customer_id"), rs.getString("first_name"), rs.getString("last_name"),
+                        rs.getString("email"), rs.getString("phone_number"), rs.getString("address"));
+                Account account;
+                String accType = rs.getString("account_type");
+                if (accType.equalsIgnoreCase("savings")) {
+                    account = new SavingsAccount(customer, rs.getFloat("balance"));
+                    ((SavingsAccount) account).setInterestRate(rs.getFloat("interest_rate"));
+                } else if (accType.equalsIgnoreCase("current")) {
+                    account = new CurrentAccount(customer, rs.getFloat("balance"), rs.getFloat("overdraft_limit"));
+                } else {
+                    account = new ZeroBalanceAccount(customer);
+                }
+                account.setAccountNumber(rs.getLong("account_id"));
+                accounts.add(account);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listing accounts: " + e.getMessage());
+        }
+        return accounts;
+    }
+
+    @Override
+    public void calculateInterest() {
+        try (Connection conn = getConnection()) {
+            String sql = "UPDATE Accounts SET balance = balance + (balance * interest_rate / 100) WHERE account_type = 'Savings'";
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error calculating interest: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public float getAccountBalance(long accountNumber) throws InvalidAccountException {
+        try (Connection conn = getConnection()) {
+            String sql = "SELECT balance FROM Accounts WHERE account_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, accountNumber);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getFloat("balance");
+            }
+            throw new InvalidAccountException("Account number " + accountNumber + " not found");
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting balance: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public float deposit(long accountNumber, float amount) throws InvalidAccountException {
+        try (Connection conn = getConnection()) {
+            String sql = "UPDATE Accounts SET balance = balance + ? WHERE account_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setFloat(1, amount);
+            stmt.setLong(2, accountNumber);
+            int rows = stmt.executeUpdate();
+            if (rows == 0) throw new InvalidAccountException("Account number " + accountNumber + " not found");
+
+            String transSql = "INSERT INTO Transactions (account_id, description, transaction_date, transaction_type, amount) VALUES (?, ?, NOW(), 'Deposit', ?)";
+            PreparedStatement transStmt = conn.prepareStatement(transSql);
+            transStmt.setLong(1, accountNumber);
+            transStmt.setString(2, "Deposit of " + amount);
+            transStmt.setFloat(3, amount);
+            transStmt.executeUpdate();
+
+            return getAccountBalance(accountNumber);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error depositing: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public float withdraw(long accountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        try (Connection conn = getConnection()) {
+            String sql = "SELECT balance, account_type, overdraft_limit FROM Accounts WHERE account_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, accountNumber);
+            ResultSet rs = stmt.executeQuery();
+            if (!rs.next()) throw new InvalidAccountException("Account number " + accountNumber + " not found");
+
+            float balance = rs.getFloat("balance");
+            String accType = rs.getString("account_type");
+            float overdraftLimit = rs.getFloat("overdraft_limit");
+
+            if (accType.equalsIgnoreCase("savings") && balance - amount < 500) {
+                throw new InsufficientFundException("Withdrawal violates minimum balance of 500 for Savings Account");
+            } else if (accType.equalsIgnoreCase("current") && balance - amount < -overdraftLimit) {
+                throw new OverDraftLimitExceededException("Withdrawal exceeds overdraft limit of " + overdraftLimit);
+            } else if (!accType.equalsIgnoreCase("current") && balance < amount) {
+                throw new InsufficientFundException("Insufficient funds in account " + accountNumber);
+            }
+
+            String updateSql = "UPDATE Accounts SET balance = balance - ? WHERE account_id = ?";
+            PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+            updateStmt.setFloat(1, amount);
+            updateStmt.setLong(2, accountNumber);
+            updateStmt.executeUpdate();
+
+            String transSql = "INSERT INTO Transactions (account_id, description, transaction_date, transaction_type, amount) VALUES (?, ?, NOW(), 'Withdrawal', ?)";
+            PreparedStatement transStmt = conn.prepareStatement(transSql);
+            transStmt.setLong(1, accountNumber);
+            transStmt.setString(2, "Withdrawal of " + amount);
+            transStmt.setFloat(3, amount);
+            transStmt.executeUpdate();
+
+            return getAccountBalance(accountNumber);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error withdrawing: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void transfer(long fromAccountNumber, long toAccountNumber, float amount) throws InvalidAccountException, InsufficientFundException, OverDraftLimitExceededException {
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                float fromBalance = withdraw(fromAccountNumber, amount);
+                float toBalance = deposit(toAccountNumber, amount);
+
+                String transSql = "INSERT INTO Transactions (account_id, description, transaction_date, transaction_type, amount) VALUES (?, ?, NOW(), 'Transfer', ?)";
+                PreparedStatement transStmt = conn.prepareStatement(transSql);
+                transStmt.setLong(1, fromAccountNumber);
+                transStmt.setString(2, "Transfer to " + toAccountNumber);
+                transStmt.setFloat(3, amount);
+                transStmt.executeUpdate();
+
+                transStmt.setLong(1, toAccountNumber);
+                transStmt.setString(2, "Transfer from " + fromAccountNumber);
+                transStmt.setFloat(3, amount);
+                transStmt.executeUpdate();
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error transferring: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Account getAccountDetails(long accountNumber) throws InvalidAccountException {
+        try (Connection conn = getConnection()) {
+            String sql = "SELECT a.*, c.* FROM Accounts a JOIN Customers c ON a.customer_id = c.customer_id WHERE a.account_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, accountNumber);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Customer customer = new Customer(rs.getInt("customer_id"), rs.getString("first_name"), rs.getString("last_name"),
+                        rs.getString("email"), rs.getString("phone_number"), rs.getString("address"));
+                Account account;
+                String accType = rs.getString("account_type");
+                if (accType.equalsIgnoreCase("savings")) {
+                    account = new SavingsAccount(customer, rs.getFloat("balance"));
+                    ((SavingsAccount) account).setInterestRate(rs.getFloat("interest_rate"));
+                } else if (accType.equalsIgnoreCase("current")) {
+                    account = new CurrentAccount(customer, rs.getFloat("balance"), rs.getFloat("overdraft_limit"));
+                } else {
+                    account = new ZeroBalanceAccount(customer);
+                }
+                account.setAccountNumber(rs.getLong("account_id"));
+                return account;
+            }
+            throw new InvalidAccountException("Account number " + accountNumber + " not found");
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting account details: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Transaction> getTransactions(long accountNumber, Date fromDate, Date toDate) throws InvalidAccountException {
+        List<Transaction> transactions = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            String sql = "SELECT * FROM Transactions WHERE account_id = ? AND transaction_date BETWEEN ? AND ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, accountNumber);
+            stmt.setTimestamp(2, new Timestamp(fromDate.getTime()));
+            stmt.setTimestamp(3, new Timestamp(toDate.getTime()));
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Transaction transaction = new Transaction(rs.getInt("transaction_id"), rs.getLong("account_id"),
+                        rs.getString("description"), rs.getTimestamp("transaction_date"), rs.getString("transaction_type"),
+                        rs.getFloat("amount"));
+                transactions.add(transaction);
+            }
+            if (transactions.isEmpty() && getAccountBalance(accountNumber) == -1) {
+                throw new InvalidAccountException("Account number " + accountNumber + " not found");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting transactions: " + e.getMessage());
+        }
+        return transactions;
+    }
+}
+
+// File: bean/DBUtil.java
+package bean;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+class DBUtil {
+    private static final String URL = "jdbc:mysql://localhost:3306/HMBank";
+    private static final String USER = "root"; // Replace with your MySQL username
+    private static final String PASSWORD = "password"; // Replace with your MySQL password
+
+    public static Connection getDBConn() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+}
+
+// Package: app
+// File: app/BankApp.java
+package app;
+
+import bean.*;
+import service.IBankRepository;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
+
+public class BankApp {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        IBankRepository bankRepository = new BankRepositoryImpl();
+        BankServiceProviderImpl bank = new BankServiceProviderImpl("Main Branch", "123 Bank St", bankRepository);
+        int customerIdCounter = 1;
+
+        while (true) {
+            System.out.println("\nBanking System Menu:");
+            System.out.println("1. Create Account");
+            System.out.println("2. Deposit");
+            System.out.println("3. Withdraw");
+            System.out.println("4. Get Balance");
+            System.out.println("5. Transfer");
+            System.out.println("6. Get Account Details");
+            System.out.println("7. List Accounts");
+            System.out.println("8. Calculate Interest");
+            System.out.println("9. Get Transactions");
+            System.out.println("10. Exit");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
+
+            try {
+                switch (choice) {
+                    case "1": // Create Account
+                        System.out.println("Enter First Name: ");
+                        String firstName = scanner.nextLine();
+                        System.out.println("Enter Last Name: ");
+                        String lastName = scanner.nextLine();
+                        System.out.println("Enter Email: ");
+                        String email = scanner.nextLine();
+                        System.out.println("Enter Phone Number (10 digits): ");
+                        String phoneNumber = scanner.nextLine();
+                        System.out.println("Enter Address: ");
+                        String address = scanner.nextLine();
+
+                        Customer customer = new Customer(customerIdCounter++, firstName, lastName, email, phoneNumber, address);
+
+                        System.out.println("Choose Account Type:");
+                        System.out.println("1. Savings (Min Balance: 500)");
+                        System.out.println("2. Current (Overdraft Limit: 1000)");
+                        System.out.println("3. Zero Balance");
+                        System.out.print("Enter choice: ");
+                        String accTypeChoice = scanner.nextLine();
+                        String accType;
+                        float balance = 0;
+                        if (accTypeChoice.equals("1")) {
+                            accType = "savings";
+                            System.out.println("Enter Initial Balance (min 500): ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("2")) {
+                            accType = "current";
+                            System.out.println("Enter Initial Balance: ");
+                            balance = Float.parseFloat(scanner.nextLine());
+                        } else if (accTypeChoice.equals("3")) {
+                            accType = "zerobalance";
+                        } else {
+                            throw new IllegalArgumentException("Invalid account type choice");
+                        }
+
+                        Account newAccount = bank.createAccount(customer, accType, balance);
+                        System.out.println("Account created with Account Number: " + newAccount.getAccountNumber());
+                        break;
+
+                    case "2": // Deposit
+                        System.out.println("Enter Account Number: ");
+                        long depositAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Deposit: ");
+                        float depositAmount = Float.parseFloat(scanner.nextLine());
+                        float newBalance = bank.deposit(depositAccNo, depositAmount);
+                        System.out.println("Deposit successful. New Balance: " + newBalance);
+                        break;
+
+                    case "3": // Withdraw
+                        System.out.println("Enter Account Number: ");
+                        long withdrawAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Withdraw: ");
+                        float withdrawAmount = Float.parseFloat(scanner.nextLine());
+                        newBalance = bank.withdraw(withdrawAccNo, withdrawAmount);
+                        System.out.println("Withdrawal successful. New Balance: " + newBalance);
+                        break;
+
+                    case "4": // Get Balance
+                        System.out.println("Enter Account Number: ");
+                        long balanceAccNo = Long.parseLong(scanner.nextLine());
+                        float bal = bank.getAccountBalance(balanceAccNo);
+                        System.out.println("Current Balance: " + bal);
+                        break;
+
+                    case "5": // Transfer
+                        System.out.println("Enter From Account Number: ");
+                        long fromAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter To Account Number: ");
+                        long toAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter Amount to Transfer: ");
+                        float transferAmount = Float.parseFloat(scanner.nextLine());
+                        bank.transfer(fromAccNo, toAccNo, transferAmount);
+                        break;
+
+                    case "6": // Get Account Details
+                        System.out.println("Enter Account Number: ");
+                        long detailsAccNo = Long.parseLong(scanner.nextLine());
+                        Account account = bank.getAccountDetails(detailsAccNo);
+                        if (account != null) account.printInfo();
+                        break;
+
+                    case "7": // List Accounts
+                        Account[] accounts = bank.listAccounts();
+                        for (Account acc : accounts) {
+                            acc.printInfo();
+                            System.out.println("-------------------");
+                        }
+                        break;
+
+                    case "8": // Calculate Interest
+                        bank.calculateInterest();
+                        System.out.println("Interest calculated for all savings accounts.");
+                        break;
+
+                    case "9": // Get Transactions
+                        System.out.println("Enter Account Number: ");
+                        long transAccNo = Long.parseLong(scanner.nextLine());
+                        System.out.println("Enter From Date (yyyy-MM-dd): ");
+                        Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(scanner.nextLine());
+                        System.out.println("Enter To Date (yyyy-MM-dd): ");
+                        Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(scanner.nextLine());
+                        List<Transaction> transactions = bank.getTransactions(transAccNo, fromDate, toDate);
+                        for (Transaction trans : transactions) {
+                            trans.printInfo();
+                            System.out.println("-------------------");
+                        }
+                        break;
+
+                    case "10": // Exit
+                        System.out.println("Exiting Banking System. Goodbye!");
+                        scanner.close();
+                        System.exit(0);
+
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (InvalidAccountException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (InsufficientFundException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (OverDraftLimitExceededException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Invalid number format. Please enter a valid number.");
+            } catch (java.text.ParseException e) {
+                System.out.println("Error: Invalid date format. Use yyyy-MM-dd.");
+            } catch (NullPointerException e) {
+                System.out.println("Error: Null pointer encountered. Please check input data.");
+            } catch (Exception e) {
+                System.out.println("Unexpected error: " + e.getMessage());
+            }
+        }
+    }
+}
