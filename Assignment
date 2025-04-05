@@ -1,3 +1,4 @@
+Name : Sujal Manish Vadgave   Topic : sql and java assignments   empid : 2000147877
 -- Create the HMBank database
 CREATE DATABASE IF NOT EXISTS HMBanks;
 USE HMBanks;
